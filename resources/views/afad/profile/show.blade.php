@@ -2,11 +2,9 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5 class="fw-bold mb-0">My Profile</h5>
-    @if(in_array($profile->status, ['pending', 'rejected']))
-        <a href="{{ route('afad.profile.edit') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-pencil me-1"></i> Edit Profile
-        </a>
-    @endif
+    <a href="{{ route('afad.profile.edit') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil me-1"></i> Edit Profile
+    </a>
 </div>
 
 <div class="row g-4">
@@ -19,6 +17,10 @@
                     <dd class="col-sm-8">{{ $profile->full_name }}</dd>
                     <dt class="col-sm-4 text-muted">IC Number</dt>
                     <dd class="col-sm-8">{{ $profile->ic_number }}</dd>
+                    <dt class="col-sm-4 text-muted">Date of Birth</dt>
+                    <dd class="col-sm-8">{{ $profile->date_of_birth?->format('d M Y') ?? '—' }}</dd>
+                    <dt class="col-sm-4 text-muted">Gender</dt>
+                    <dd class="col-sm-8">{{ $profile->gender ? ucfirst($profile->gender) : '—' }}</dd>
                     <dt class="col-sm-4 text-muted">Phone</dt>
                     <dd class="col-sm-8">{{ $profile->phone }}</dd>
                     <dt class="col-sm-4 text-muted">Email</dt>
@@ -39,11 +41,13 @@
                     <dd class="col-sm-8">{{ ucfirst($profile->qualification_level) }}</dd>
                     <dt class="col-sm-4 text-muted">Specialisation</dt>
                     <dd class="col-sm-8">{{ $profile->specialisation ?? '—' }}</dd>
+                    <dt class="col-sm-4 text-muted">Area of Expertise</dt>
+                    <dd class="col-sm-8">{{ $profile->area_of_expertise ?? '—' }}</dd>
                 </dl>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Bank Information</div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -54,6 +58,58 @@
                     <dt class="col-sm-4 text-muted">Account Holder</dt>
                     <dd class="col-sm-8">{{ $profile->bank_account_holder }}</dd>
                 </dl>
+            </div>
+        </div>
+
+        {{-- Resume / CV --}}
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Resume / CV</div>
+            <div class="card-body">
+                @if($profile->resume_path)
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-file-earmark-pdf text-danger fs-3"></i>
+                        <div>
+                            <div class="fw-semibold">{{ $profile->resume_original_name }}</div>
+                            <div class="text-muted small">{{ number_format($profile->resume_size / 1024, 1) }} KB</div>
+                        </div>
+                    </div>
+                @else
+                    <p class="text-muted small mb-0">No resume uploaded yet.</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Certifications --}}
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Certifications / Verification Documents</span>
+                <a href="{{ route('afad.certificates.index') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+            </div>
+            <div class="card-body">
+                @forelse($profile->certificates as $cert)
+                    <div class="d-flex align-items-start gap-3 py-3 {{ !$loop->last ? 'border-bottom' : '' }}">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-award fs-4 {{ $cert->is_verified ? 'text-success' : 'text-muted' }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">{{ $cert->title }}</div>
+                            <div class="text-muted small">{{ $cert->issuing_institution }} &mdash; {{ $cert->year_obtained }}</div>
+                            @if($cert->file_original_name)
+                                <div class="small mt-1">
+                                    <i class="bi bi-paperclip"></i> {{ $cert->file_original_name }}
+                                    <span class="text-muted">({{ number_format($cert->file_size / 1024, 1) }} KB)</span>
+                                </div>
+                            @endif
+                        </div>
+                        <div>
+                            <span class="badge {{ $cert->is_verified ? 'bg-success' : 'bg-warning text-dark' }}">
+                                {{ $cert->is_verified ? 'Verified' : 'Pending' }}
+                            </span>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-muted small mb-0">No certificates uploaded yet.</p>
+                @endforelse
             </div>
         </div>
     </div>
@@ -73,26 +129,6 @@
                         <strong>Reason:</strong> {{ $profile->rejection_reason }}
                     </div>
                 @endif
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <span class="fw-semibold">Certificates</span>
-                <a href="{{ route('afad.certificates.index') }}" class="btn btn-sm btn-outline-primary">Manage</a>
-            </div>
-            <div class="card-body">
-                @forelse($profile->certificates as $cert)
-                    <div class="d-flex align-items-center gap-2 py-1 border-bottom">
-                        <i class="bi bi-award {{ $cert->is_verified ? 'text-success' : 'text-muted' }}"></i>
-                        <div class="small">
-                            <div class="fw-semibold">{{ $cert->title }}</div>
-                            <div class="text-muted">{{ $cert->issuing_institution }}, {{ $cert->year_obtained }}</div>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-muted small mb-0">No certificates added.</p>
-                @endforelse
             </div>
         </div>
     </div>

@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'user_id', 'full_name', 'ic_number', 'phone', 'address', 'contact_email',
-    'qualification', 'qualification_level', 'specialisation',
+    'date_of_birth', 'gender',
+    'qualification', 'qualification_level', 'specialisation', 'area_of_expertise',
+    'resume_path', 'resume_original_name', 'resume_size',
     'bank_name', 'bank_account_number', 'bank_account_holder',
     'status', 'verified_by', 'verified_at', 'rejection_reason',
 ])]
@@ -22,7 +24,8 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
-            'verified_at' => 'datetime',
+            'date_of_birth' => 'date',
+            'verified_at'   => 'datetime',
         ];
     }
 
@@ -49,6 +52,11 @@ class Profile extends Model
     public function claims(): HasMany
     {
         return $this->hasMany(Claim::class);
+    }
+
+    public function classSessions(): HasMany
+    {
+        return $this->hasMany(ClassSession::class);
     }
 
     public function scopePending(Builder $query): Builder

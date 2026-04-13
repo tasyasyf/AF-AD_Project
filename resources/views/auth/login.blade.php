@@ -47,6 +47,11 @@
                     <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
                 </button>
             </form>
+
+            <div class="text-center mt-3">
+                <span class="text-muted small">Don't have an account?</span>
+                <a href="{{ route('register') }}" class="small fw-semibold">Create Account</a>
+            </div>
         </div>
         <div class="card-footer bg-light text-center text-muted small py-3">
             Academic Facilitator &amp; Developer System &copy; {{ date('Y') }}

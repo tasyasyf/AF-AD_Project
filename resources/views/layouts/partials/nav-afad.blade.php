@@ -12,6 +12,14 @@
         <i class="bi bi-award"></i> Certificates
     </a>
 
+    <div class="nav-section">Classes</div>
+    <a href="{{ route('afad.classes.index') }}" class="nav-link {{ request()->routeIs('afad.classes.*') ? 'active' : '' }}">
+        <i class="bi bi-journal-bookmark"></i> My Classes
+    </a>
+    <a href="{{ route('afad.classes.create') }}" class="nav-link">
+        <i class="bi bi-plus-circle"></i> Add Class
+    </a>
+
     <div class="nav-section">Appointments</div>
     <a href="{{ route('afad.appointments.index') }}" class="nav-link {{ request()->routeIs('afad.appointments.*') ? 'active' : '' }}">
         <i class="bi bi-calendar3"></i> My Appointments

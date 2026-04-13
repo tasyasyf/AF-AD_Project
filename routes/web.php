@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AfAd;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Executive;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,8 @@ Route::get('/', fn () => redirect()->route('login'));
 // Auth routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // AF/AD routes
@@ -30,6 +33,15 @@ Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(f
     Route::get('/certificates/create', [AfAd\CertificateController::class, 'create'])->name('certificates.create');
     Route::post('/certificates', [AfAd\CertificateController::class, 'store'])->name('certificates.store');
     Route::delete('/certificates/{certificate}', [AfAd\CertificateController::class, 'destroy'])->name('certificates.destroy');
+
+    // Classes
+    Route::get('/classes', [AfAd\ClassController::class, 'index'])->name('classes.index');
+    Route::get('/classes/create', [AfAd\ClassController::class, 'create'])->name('classes.create');
+    Route::post('/classes', [AfAd\ClassController::class, 'store'])->name('classes.store');
+    Route::get('/classes/{class}', [AfAd\ClassController::class, 'show'])->name('classes.show');
+    Route::get('/classes/{class}/edit', [AfAd\ClassController::class, 'edit'])->name('classes.edit');
+    Route::put('/classes/{class}', [AfAd\ClassController::class, 'update'])->name('classes.update');
+    Route::delete('/classes/{class}', [AfAd\ClassController::class, 'destroy'])->name('classes.destroy');
 
     // Appointments (read-only)
     Route::get('/appointments', [AfAd\AppointmentController::class, 'index'])->name('appointments.index');
