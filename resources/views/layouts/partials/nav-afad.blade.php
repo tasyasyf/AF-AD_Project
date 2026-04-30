@@ -32,4 +32,12 @@
     <a href="{{ route('afad.claims.create') }}" class="nav-link">
         <i class="bi bi-plus-circle"></i> New Claim
     </a>
+
+    <div class="nav-section">Submissions</div>
+    <a href="{{ route('afad.submissions.index') }}" class="nav-link {{ request()->routeIs('afad.submissions.*') ? 'active' : '' }}">
+        <i class="bi bi-camera-video"></i> My Submissions
+    </a>
+    <a href="{{ route('afad.submissions.create') }}" class="nav-link">
+        <i class="bi bi-cloud-upload"></i> New Submission
+    </a>
 </div>

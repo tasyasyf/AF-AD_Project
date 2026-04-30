@@ -49,7 +49,14 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('admin.appointments.show', $appt) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('admin.appointments.show', $appt) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{{ route('admin.appointments.edit', $appt) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form method="POST" action="{{ route('admin.appointments.destroy', $appt) }}" onsubmit="return confirm('Delete this appointment? This cannot be undone.');" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty

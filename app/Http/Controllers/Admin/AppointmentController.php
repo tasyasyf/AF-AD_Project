@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,5 +32,41 @@ class AppointmentController extends Controller
     {
         $appointment->load(['profile.user', 'appointedBy', 'claims']);
         return view('admin.appointments.show', compact('appointment'));
+    }
+
+    public function edit(Appointment $appointment): View
+    {
+        return view('admin.appointments.edit', compact('appointment'));
+    }
+
+    public function update(Request $request, Appointment $appointment): RedirectResponse
+    {
+        $data = $request->validate([
+            'course_code'      => ['required', 'string', 'max:20'],
+            'course_name'      => ['required', 'string', 'max:255'],
+            'role_type'        => ['required', 'in:af,ad'],
+            'semester'         => ['required', 'string', 'max:20'],
+            'academic_session' => ['required', 'string', 'max:20'],
+            'start_date'       => ['required', 'date'],
+            'end_date'         => ['required', 'date', 'after_or_equal:start_date'],
+            'venue'            => ['nullable', 'string', 'max:255'],
+            'student_count'    => ['nullable', 'integer', 'min:0'],
+            'is_active'        => ['nullable', 'boolean'],
+            'notes'            => ['nullable', 'string'],
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+        $appointment->update($data);
+
+        return redirect()->route('admin.appointments.show', $appointment)
+            ->with('success', 'Appointment updated successfully.');
+    }
+
+    public function destroy(Appointment $appointment): RedirectResponse
+    {
+        $appointment->delete();
+
+        return redirect()->route('admin.appointments.index')
+            ->with('success', 'Appointment deleted successfully.');
     }
 }

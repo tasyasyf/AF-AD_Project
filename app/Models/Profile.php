@@ -59,6 +59,11 @@ class Profile extends Model
         return $this->hasMany(ClassSession::class);
     }
 
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');

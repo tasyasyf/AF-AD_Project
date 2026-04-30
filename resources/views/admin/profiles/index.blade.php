@@ -44,7 +44,14 @@
                         <td><x-status-badge :status="$profile->status" /></td>
                         <td class="small text-muted">{{ $profile->created_at->format('d M Y') }}</td>
                         <td>
-                            <a href="{{ route('admin.profiles.show', $profile) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('admin.profiles.show', $profile) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{{ route('admin.profiles.edit', $profile) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <form method="POST" action="{{ route('admin.profiles.destroy', $profile) }}" onsubmit="return confirm('Delete this profile? This cannot be undone.');" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty

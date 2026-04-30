@@ -60,6 +60,14 @@ Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(f
     // Claim documents
     Route::post('/claims/{claim}/documents/{document}/upload', [AfAd\ClaimDocumentController::class, 'upload'])->name('claims.documents.upload');
     Route::delete('/claims/{claim}/documents/{document}', [AfAd\ClaimDocumentController::class, 'remove'])->name('claims.documents.remove');
+
+    // Submissions (video recording link uploads)
+    Route::get('/submissions', [AfAd\SubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/create', [AfAd\SubmissionController::class, 'create'])->name('submissions.create');
+    Route::post('/submissions', [AfAd\SubmissionController::class, 'store'])->name('submissions.store');
+    Route::get('/submissions/{submission}', [AfAd\SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/submissions/{submission}/download', [AfAd\SubmissionController::class, 'download'])->name('submissions.download');
+    Route::delete('/submissions/{submission}', [AfAd\SubmissionController::class, 'destroy'])->name('submissions.destroy');
 });
 
 // Executive routes
@@ -86,15 +94,36 @@ Route::prefix('executive')->name('executive.')->middleware(['auth', 'role:execut
     Route::post('/claims/{claim}/approve', [Executive\ClaimReviewController::class, 'approve'])->name('claims.approve');
     Route::post('/claims/{claim}/return', [Executive\ClaimReviewController::class, 'return'])->name('claims.return');
     Route::post('/claims/{claim}/reject', [Executive\ClaimReviewController::class, 'reject'])->name('claims.reject');
+
+    // Submissions (review video recording uploads)
+    Route::get('/submissions', [Executive\SubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/{submission}', [Executive\SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/submissions/{submission}/download', [Executive\SubmissionController::class, 'download'])->name('submissions.download');
+    Route::post('/submissions/{submission}/review', [Executive\SubmissionController::class, 'review'])->name('submissions.review');
 });
 
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Profiles
     Route::get('/profiles', [Admin\ProfileController::class, 'index'])->name('profiles.index');
     Route::get('/profiles/{profile}', [Admin\ProfileController::class, 'show'])->name('profiles.show');
+    Route::get('/profiles/{profile}/edit', [Admin\ProfileController::class, 'edit'])->name('profiles.edit');
+    Route::put('/profiles/{profile}', [Admin\ProfileController::class, 'update'])->name('profiles.update');
+    Route::delete('/profiles/{profile}', [Admin\ProfileController::class, 'destroy'])->name('profiles.destroy');
+
+    // Appointments
     Route::get('/appointments', [Admin\AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/{appointment}', [Admin\AppointmentController::class, 'show'])->name('appointments.show');
+    Route::get('/appointments/{appointment}/edit', [Admin\AppointmentController::class, 'edit'])->name('appointments.edit');
+    Route::put('/appointments/{appointment}', [Admin\AppointmentController::class, 'update'])->name('appointments.update');
+    Route::delete('/appointments/{appointment}', [Admin\AppointmentController::class, 'destroy'])->name('appointments.destroy');
+
+    // Claims
     Route::get('/claims', [Admin\ClaimController::class, 'index'])->name('claims.index');
     Route::get('/claims/{claim}', [Admin\ClaimController::class, 'show'])->name('claims.show');
+    Route::get('/claims/{claim}/edit', [Admin\ClaimController::class, 'edit'])->name('claims.edit');
+    Route::put('/claims/{claim}', [Admin\ClaimController::class, 'update'])->name('claims.update');
+    Route::delete('/claims/{claim}', [Admin\ClaimController::class, 'destroy'])->name('claims.destroy');
 });

@@ -21,4 +21,9 @@
     <a href="{{ route('executive.claims.index') }}" class="nav-link {{ request()->routeIs('executive.claims.*') ? 'active' : '' }}">
         <i class="bi bi-file-earmark-check"></i> Review Claims
     </a>
+
+    <div class="nav-section">Submissions</div>
+    <a href="{{ route('executive.submissions.index') }}" class="nav-link {{ request()->routeIs('executive.submissions.*') ? 'active' : '' }}">
+        <i class="bi bi-camera-video"></i> AF/AD Submissions
+    </a>
 </div>
