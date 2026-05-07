@@ -26,9 +26,35 @@
                     <dd class="col-sm-9">{{ $submission->profile->contact_email }}</dd>
                     <dt class="col-sm-3 text-muted">Title</dt>
                     <dd class="col-sm-9">{{ $submission->title }}</dd>
+                    <dt class="col-sm-3 text-muted">Type</dt>
+                    <dd class="col-sm-9">{{ $submission->type_label }}</dd>
+                    <dt class="col-sm-3 text-muted">Submission Date</dt>
+                    <dd class="col-sm-9">{{ ($submission->submission_date ?? $submission->created_at)->format('d M Y') }}</dd>
+                    @if($submission->isVideoRecording())
+                        <dt class="col-sm-3 text-muted">Tutorial</dt>
+                        <dd class="col-sm-9">Tutorial {{ $submission->tutorial_number ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Duration</dt>
+                        <dd class="col-sm-9">{{ $submission->video_duration_minutes ? number_format($submission->video_duration_minutes, 2) . ' minutes' : '—' }}</dd>
+                    @endif
+                    @if($submission->isQuestionBankAnswerSheet())
+                        <dt class="col-sm-3 text-muted">Semester Intake</dt>
+                        <dd class="col-sm-9">{{ $submission->semester_intake ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Course</dt>
+                        <dd class="col-sm-9">{{ $submission->course ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Programme</dt>
+                        <dd class="col-sm-9">{{ $submission->programme ?? '—' }}</dd>
+                    @endif
+                    @if($submission->isMarkEntryForms())
+                        <dt class="col-sm-3 text-muted">Course Code</dt>
+                        <dd class="col-sm-9">{{ $submission->course ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Course Name</dt>
+                        <dd class="col-sm-9">{{ $submission->course_name ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Programme</dt>
+                        <dd class="col-sm-9">{{ $submission->programme ?? '—' }}</dd>
+                    @endif
                     <dt class="col-sm-3 text-muted">Description</dt>
                     <dd class="col-sm-9">{{ $submission->description ?? '—' }}</dd>
-                    <dt class="col-sm-3 text-muted">Submitted</dt>
+                    <dt class="col-sm-3 text-muted">Uploaded At</dt>
                     <dd class="col-sm-9">{{ $submission->created_at->format('d M Y H:i') }}</dd>
                 </dl>
             </div>
@@ -39,11 +65,11 @@
             <div class="card-body">
                 <p class="text-muted small mb-3">
                     <i class="bi bi-info-circle me-1"></i>
-                    Click on the file below to download and view the video recording link inside.
+                    Click on the file below to download and view the submitted file.
                 </p>
                 <a href="{{ route('executive.submissions.download', $submission) }}" class="text-decoration-none">
                     <div class="border rounded p-3 d-flex align-items-center gap-3 bg-light hover-shadow" style="cursor: pointer;">
-                        <i class="bi bi-{{ str_contains($submission->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-excel text-success' }} fs-1"></i>
+                        <i class="bi bi-{{ str_starts_with($submission->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($submission->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} fs-1"></i>
                         <div class="flex-grow-1">
                             <div class="fw-semibold text-dark">{{ $submission->file_original_name }}</div>
                             <div class="text-muted small">{{ number_format($submission->file_size / 1024, 1) }} KB &mdash; {{ $submission->file_mime }}</div>

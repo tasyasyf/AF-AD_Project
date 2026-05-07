@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'appointment_id', 'profile_id', 'claim_reference', 'claim_type',
     'period_from', 'period_to', 'total_hours', 'rate_per_hour', 'total_amount',
+    'has_mark_entry_forms', 'has_graded_scripts', 'has_qa', 'has_question_bank_answer_sheet',
     'status', 'submitted_at', 'reviewed_by', 'reviewed_at',
     'executive_remarks', 'payment_reference', 'paid_at',
 ])]
@@ -30,6 +31,10 @@ class Claim extends Model
             'total_hours' => 'decimal:2',
             'rate_per_hour' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'has_mark_entry_forms' => 'boolean',
+            'has_graded_scripts' => 'boolean',
+            'has_qa' => 'boolean',
+            'has_question_bank_answer_sheet' => 'boolean',
         ];
     }
 

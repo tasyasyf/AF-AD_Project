@@ -22,7 +22,6 @@
                             <th>Reference</th>
                             <th>Course</th>
                             <th>Type</th>
-                            <th>Period</th>
                             <th>Hours</th>
                             <th>Amount (RM)</th>
                             <th>Status</th>
@@ -35,9 +34,6 @@
                             <td class="fw-semibold">{{ $claim->claim_reference }}</td>
                             <td>{{ $claim->appointment->course_code }}</td>
                             <td class="small">{{ ucfirst(str_replace('_',' ',$claim->claim_type)) }}</td>
-                            <td class="small text-muted">
-                                {{ $claim->period_from->format('d M') }} – {{ $claim->period_to->format('d M Y') }}
-                            </td>
                             <td>{{ $claim->total_hours }}</td>
                             <td>{{ number_format($claim->total_amount, 2) }}</td>
                             <td><x-status-badge :status="$claim->status" /></td>

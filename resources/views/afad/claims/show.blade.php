@@ -56,8 +56,6 @@
                     <dd class="col-sm-8">{{ $claim->appointment->course_code }} – {{ $claim->appointment->course_name }}</dd>
                     <dt class="col-sm-4 text-muted">Claim Type</dt>
                     <dd class="col-sm-8">{{ ucfirst(str_replace('_', ' ', $claim->claim_type)) }}</dd>
-                    <dt class="col-sm-4 text-muted">Period</dt>
-                    <dd class="col-sm-8">{{ $claim->period_from->format('d M Y') }} – {{ $claim->period_to->format('d M Y') }}</dd>
                     <dt class="col-sm-4 text-muted">Total Hours</dt>
                     <dd class="col-sm-8">{{ $claim->total_hours }} hours</dd>
                     <dt class="col-sm-4 text-muted">Rate / Hour</dt>
@@ -73,6 +71,21 @@
                         <dd class="col-sm-8">{{ $claim->executive_remarks }}</dd>
                     @endif
                 </dl>
+                <hr>
+                <div class="text-muted small fw-semibold mb-2">Submission Checklist</div>
+                <div class="row g-2">
+                    @foreach([
+                        'has_mark_entry_forms' => 'Mark-entry Forms',
+                        'has_graded_scripts' => 'Graded Scripts',
+                        'has_qa' => 'Question Paper & Answer Sheet',
+                    ] as $field => $label)
+                        <div class="col-md-6">
+                            <span class="badge bg-{{ $claim->{$field} ? 'success' : 'secondary' }}">
+                                <i class="bi bi-{{ $claim->{$field} ? 'check2' : 'dash' }} me-1"></i>{{ $label }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 

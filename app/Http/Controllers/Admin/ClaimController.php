@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\Claim;
+use App\Models\ClaimAudit;
+use App\Models\Profile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -40,19 +43,76 @@ class ClaimController extends Controller
         return view('admin.claims.edit', compact('claim'));
     }
 
+    public function create(): View
+    {
+        $appointments = Appointment::with('profile')
+            ->active()
+            ->latest('start_date')
+            ->get();
+
+        return view('admin.claims.create', compact('appointments'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'appointment_id' => ['required', 'exists:appointments,id'],
+            'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
+            'total_hours'    => ['required', 'numeric', 'min:0'],
+            'rate_per_hour'  => ['required', 'numeric', 'min:0'],
+            'status'         => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],
+            'executive_remarks' => ['nullable', 'string'],
+            'has_mark_entry_forms' => ['nullable', 'boolean'],
+            'has_graded_scripts' => ['nullable', 'boolean'],
+            'has_qa' => ['nullable', 'boolean'],
+        ]);
+
+        $appointment = Appointment::with('profile')->findOrFail($data['appointment_id']);
+
+        $claim = Claim::create([
+            'appointment_id' => $appointment->id,
+            'profile_id' => $appointment->profile_id,
+            'claim_type' => $data['claim_type'],
+            'period_from' => $appointment->start_date,
+            'period_to' => $appointment->end_date,
+            'total_hours' => $data['total_hours'],
+            'rate_per_hour' => $data['rate_per_hour'],
+            'total_amount' => round($data['total_hours'] * $data['rate_per_hour'], 2),
+            'status' => $data['status'],
+            'submitted_at' => in_array($data['status'], ['submitted', 'under_review', 'approved', 'returned', 'rejected'], true) ? now() : null,
+            'reviewed_by' => in_array($data['status'], ['approved', 'returned', 'rejected'], true) ? auth()->id() : null,
+            'reviewed_at' => in_array($data['status'], ['approved', 'returned', 'rejected'], true) ? now() : null,
+            'executive_remarks' => $data['executive_remarks'] ?? null,
+            'has_mark_entry_forms' => $request->boolean('has_mark_entry_forms'),
+            'has_graded_scripts' => $request->boolean('has_graded_scripts'),
+            'has_qa' => $request->boolean('has_qa'),
+        ]);
+
+        ClaimAudit::record($claim, 'created_by_admin', null, $claim->status, 'Created by admin data entry.');
+
+        return redirect()->route('admin.claims.show', $claim)
+            ->with('success', 'Claim created successfully.');
+    }
+
     public function update(Request $request, Claim $claim): RedirectResponse
     {
         $data = $request->validate([
             'claim_type'         => ['required', 'in:teaching,marking,module_development,consultation'],
-            'period_from'        => ['required', 'date'],
-            'period_to'          => ['required', 'date', 'after_or_equal:period_from'],
             'total_hours'        => ['required', 'numeric', 'min:0'],
             'rate_per_hour'      => ['required', 'numeric', 'min:0'],
             'status'             => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],
             'executive_remarks'  => ['nullable', 'string'],
+            'has_mark_entry_forms' => ['nullable', 'boolean'],
+            'has_graded_scripts' => ['nullable', 'boolean'],
+            'has_qa' => ['nullable', 'boolean'],
         ]);
 
+        $data['period_from'] = $claim->appointment->start_date;
+        $data['period_to'] = $claim->appointment->end_date;
         $data['total_amount'] = $data['total_hours'] * $data['rate_per_hour'];
+        $data['has_mark_entry_forms'] = $request->boolean('has_mark_entry_forms');
+        $data['has_graded_scripts'] = $request->boolean('has_graded_scripts');
+        $data['has_qa'] = $request->boolean('has_qa');
 
         $claim->update($data);
 

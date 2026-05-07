@@ -12,7 +12,7 @@
         @if($submissions->isEmpty())
             <div class="text-center text-muted py-5">
                 <i class="bi bi-camera-video fs-1 d-block mb-2"></i>
-                No submissions yet. Click "New Submission" to upload your video recording link file.
+                No submissions yet. Click "New Submission" to upload your file.
             </div>
         @else
             <div class="table-responsive">
@@ -20,8 +20,11 @@
                     <thead class="table-light">
                         <tr>
                             <th>Title</th>
+                            <th>Type</th>
+                            <th>Course / Details</th>
+                            <th>Amount</th>
                             <th>File</th>
-                            <th>Submitted</th>
+                            <th>Submission Date</th>
                             <th>Status</th>
                             <th>Reviewed</th>
                             <th></th>
@@ -31,11 +34,37 @@
                         @foreach($submissions as $sub)
                         <tr>
                             <td class="fw-semibold">{{ $sub->title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ $sub->type_label }}</span></td>
+                            <td class="small text-muted">
+                                <span class="fw-semibold text-dark">{{ $sub->course ?? '—' }}</span>
+                                @if($sub->course_name)
+                                    <br>{{ $sub->course_name }}
+                                @endif
+                                @if($sub->programme)
+                                    <br>{{ $sub->programme }}
+                                @endif
+                                @if($sub->isVideoRecording())
+                                    <br>Tutorial {{ $sub->tutorial_number ?? '—' }}
+                                    @if($sub->video_duration_minutes)
+                                        · {{ number_format($sub->video_duration_minutes, 2) }} min
+                                    @endif
+                                @elseif($sub->isQuestionBankAnswerSheet() && $sub->semester_intake)
+                                    <br>{{ $sub->semester_intake }}
+                                @endif
+                            </td>
                             <td class="small">
-                                <i class="bi bi-{{ str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-excel text-success' }} me-1"></i>
+                                @if($sub->claim_hours || $sub->rate_per_hour)
+                                    {{ number_format($sub->claim_hours ?? 0, 2) }} h<br>
+                                    RM {{ number_format($sub->total_amount ?? 0, 2) }}
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td class="small">
+                                <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
                                 {{ $sub->file_original_name }}
                             </td>
-                            <td class="small text-muted">{{ $sub->created_at->format('d M Y H:i') }}</td>
+                            <td class="small text-muted">{{ ($sub->submission_date ?? $sub->created_at)->format('d M Y') }}</td>
                             <td>
                                 @if($sub->status === 'reviewed')
                                     <span class="badge bg-success">Reviewed</span>

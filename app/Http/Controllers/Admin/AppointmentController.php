@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\Profile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,6 +35,39 @@ class AppointmentController extends Controller
         return view('admin.appointments.show', compact('appointment'));
     }
 
+    public function create(): View
+    {
+        $profiles = Profile::verified()->with('user')->orderBy('full_name')->get();
+        return view('admin.appointments.create', compact('profiles'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'profile_id'       => ['required', 'exists:profiles,id'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
+            'role_type'        => ['required', 'in:af,ad'],
+            'semester'         => ['required', 'string', 'in:January,May,September'],
+            'academic_session' => ['required', 'string', 'max:20'],
+            'start_date'       => ['required', 'date'],
+            'end_date'         => ['required', 'date', 'after_or_equal:start_date'],
+            'venue'            => ['nullable', 'string', 'max:255'],
+            'student_count'    => ['nullable', 'integer', 'min:0'],
+            'notes'            => ['nullable', 'string'],
+        ]);
+
+        $profile = Profile::findOrFail($data['profile_id']);
+        abort_if($profile->status !== 'verified', 422, 'Profile must be verified before appointment.');
+
+        $data['appointed_by'] = auth()->id();
+        $data['is_active'] = true;
+        $appointment = Appointment::create($data);
+
+        return redirect()->route('admin.appointments.show', $appointment)
+            ->with('success', 'Appointment created successfully.');
+    }
+
     public function edit(Appointment $appointment): View
     {
         return view('admin.appointments.edit', compact('appointment'));
@@ -42,8 +76,8 @@ class AppointmentController extends Controller
     public function update(Request $request, Appointment $appointment): RedirectResponse
     {
         $data = $request->validate([
-            'course_code'      => ['required', 'string', 'max:20'],
-            'course_name'      => ['required', 'string', 'max:255'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'role_type'        => ['required', 'in:af,ad'],
             'semester'         => ['required', 'string', 'max:20'],
             'academic_session' => ['required', 'string', 'max:20'],

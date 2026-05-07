@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\ClaimAudit;
 use App\Models\ClaimDocument;
+use App\Models\Submission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,7 +31,12 @@ class ClaimController extends Controller
                 ->with('error', 'Your profile must be verified before submitting claims.');
         }
         $appointments = $profile->appointments()->active()->get();
-        return view('afad.claims.create', compact('appointments'));
+        $submissionChecklist = $this->submissionChecklistDefaults($profile);
+        $submissionTotals = $this->submissionAmountDefaults($profile);
+        $hasRecordingSubmission = $profile->submissions()
+            ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
+            ->exists();
+        return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'hasRecordingSubmission'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -41,16 +47,20 @@ class ClaimController extends Controller
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
             'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
-            'period_from'    => ['required', 'date'],
-            'period_to'      => ['required', 'date', 'after_or_equal:period_from'],
             'total_hours'    => ['required', 'numeric', 'min:0.5'],
             'rate_per_hour'  => ['required', 'numeric', 'min:0'],
+            'has_mark_entry_forms' => ['nullable', 'boolean'],
+            'has_graded_scripts' => ['nullable', 'boolean'],
+            'has_qa' => ['nullable', 'boolean'],
         ]);
 
         $appointment = $profile->appointments()->findOrFail($data['appointment_id']);
 
         $data['profile_id']   = $profile->id;
+        $data['period_from']  = $appointment->start_date;
+        $data['period_to']    = $appointment->end_date;
         $data['total_amount'] = round($data['total_hours'] * $data['rate_per_hour'], 2);
+        $data = array_merge($data, $this->submissionChecklistData($profile));
 
         $claim = Claim::create($data);
 
@@ -77,7 +87,8 @@ class ClaimController extends Controller
 
         $profile = auth()->user()->profile;
         $appointments = $profile->appointments()->active()->get();
-        return view('afad.claims.edit', compact('claim', 'appointments'));
+        $submissionChecklist = $this->submissionChecklistDefaults($profile);
+        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist'));
     }
 
     public function update(Request $request, Claim $claim): RedirectResponse
@@ -87,13 +98,17 @@ class ClaimController extends Controller
 
         $data = $request->validate([
             'claim_type'    => ['required', 'in:teaching,marking,module_development,consultation'],
-            'period_from'   => ['required', 'date'],
-            'period_to'     => ['required', 'date', 'after_or_equal:period_from'],
             'total_hours'   => ['required', 'numeric', 'min:0.5'],
             'rate_per_hour' => ['required', 'numeric', 'min:0'],
+            'has_mark_entry_forms' => ['nullable', 'boolean'],
+            'has_graded_scripts' => ['nullable', 'boolean'],
+            'has_qa' => ['nullable', 'boolean'],
         ]);
 
+        $data['period_from'] = $claim->appointment->start_date;
+        $data['period_to'] = $claim->appointment->end_date;
         $data['total_amount'] = round($data['total_hours'] * $data['rate_per_hour'], 2);
+        $data = array_merge($data, $this->submissionChecklistData($claim->profile));
 
         $claim->update($data);
         ClaimAudit::record($claim, 'edited', $claim->status, $claim->status);
@@ -159,5 +174,39 @@ class ClaimController extends Controller
         foreach ($documents as $doc) {
             ClaimDocument::create(array_merge($doc, ['claim_id' => $claim->id]));
         }
+    }
+
+    private function submissionChecklistData($profile): array
+    {
+        return $this->submissionChecklistDefaults($profile);
+    }
+
+    private function submissionChecklistDefaults($profile): array
+    {
+        $submittedTypes = $profile->submissions()
+            ->whereIn('submission_type', array_keys(Submission::CLAIM_CHECKLIST_MAP))
+            ->pluck('submission_type')
+            ->all();
+
+        $defaults = array_fill_keys(array_values(Submission::CLAIM_CHECKLIST_MAP), false);
+        foreach ($submittedTypes as $type) {
+            $defaults[Submission::CLAIM_CHECKLIST_MAP[$type]] = true;
+        }
+
+        return $defaults;
+    }
+
+    private function submissionAmountDefaults($profile): array
+    {
+        $submissions = $profile->submissions()
+            ->whereNotNull('claim_hours')
+            ->whereNotNull('rate_per_hour')
+            ->get(['claim_hours', 'rate_per_hour', 'total_amount']);
+
+        $hours = round((float) $submissions->sum('claim_hours'), 2);
+        $amount = round((float) $submissions->sum('total_amount'), 2);
+        $rate = $hours > 0 ? round($amount / $hours, 2) : 0;
+
+        return compact('hours', 'rate', 'amount');
     }
 }

@@ -36,14 +36,14 @@ class ClassController extends Controller
         abort_if(!$profile, 403);
 
         $data = $request->validate([
-            'course_code'      => ['required', 'string', 'max:20'],
-            'course_name'      => ['required', 'string', 'max:255'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'section'          => ['nullable', 'string', 'max:50'],
             'day'              => ['required', 'string', 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday'],
             'start_time'       => ['required', 'date_format:H:i'],
             'end_time'         => ['required', 'date_format:H:i', 'after:start_time'],
             'venue'            => ['nullable', 'string', 'max:255'],
-            'semester'         => ['required', 'string', 'max:20'],
+            'semester'         => ['required', 'string', 'in:January,May,September'],
             'academic_session' => ['required', 'string', 'max:20'],
             'student_count'    => ['nullable', 'integer', 'min:0'],
             'notes'            => ['nullable', 'string'],
@@ -73,14 +73,14 @@ class ClassController extends Controller
         abort_if($class->profile->user_id !== auth()->id(), 403);
 
         $data = $request->validate([
-            'course_code'      => ['required', 'string', 'max:20'],
-            'course_name'      => ['required', 'string', 'max:255'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'section'          => ['nullable', 'string', 'max:50'],
             'day'              => ['required', 'string', 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday'],
             'start_time'       => ['required', 'date_format:H:i'],
             'end_time'         => ['required', 'date_format:H:i', 'after:start_time'],
             'venue'            => ['nullable', 'string', 'max:255'],
-            'semester'         => ['required', 'string', 'max:20'],
+            'semester'         => ['required', 'string', 'in:January,May,September'],
             'academic_session' => ['required', 'string', 'max:20'],
             'student_count'    => ['nullable', 'integer', 'min:0'],
             'notes'            => ['nullable', 'string'],

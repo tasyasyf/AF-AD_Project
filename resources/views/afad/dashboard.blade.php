@@ -2,56 +2,64 @@
 
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card h-100" style="border-color:#0d6efd">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10" style="width:52px;height:52px">
-                    <i class="bi bi-person-badge fs-4 text-primary"></i>
-                </div>
-                <div>
-                    <div class="text-muted small">Profile Status</div>
-                    <x-status-badge :status="$stats['profile_status']" />
+        <a href="{{ $profile ? route('afad.profile.show') : route('afad.profile.create') }}" class="stat-card-link">
+            <div class="card stat-card h-100" style="border-color:var(--portal-red)">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Profile Status</div>
+                        <x-status-badge :status="$stats['profile_status']" />
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card h-100" style="border-color:#198754">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:52px;height:52px">
-                    <i class="bi bi-calendar3 fs-4 text-success"></i>
-                </div>
-                <div>
-                    <div class="text-muted small">Appointments</div>
-                    <div class="fw-bold fs-4">{{ $stats['total_appointments'] }}</div>
+        <a href="{{ route('afad.appointments.index') }}" class="stat-card-link">
+            <div class="card stat-card h-100" style="border-color:#198754">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:52px;height:52px">
+                        <i class="bi bi-calendar3 fs-4 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Appointments</div>
+                        <div class="fw-bold fs-4">{{ $stats['total_appointments'] }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card h-100" style="border-color:#ffc107">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10" style="width:52px;height:52px">
-                    <i class="bi bi-hourglass-split fs-4 text-warning"></i>
-                </div>
-                <div>
-                    <div class="text-muted small">Pending Claims</div>
-                    <div class="fw-bold fs-4">{{ $stats['pending_claims'] }}</div>
+        <a href="{{ route('afad.claims.index') }}" class="stat-card-link">
+            <div class="card stat-card h-100" style="border-color:#ffc107">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10" style="width:52px;height:52px">
+                        <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Pending Claims</div>
+                        <div class="fw-bold fs-4">{{ $stats['pending_claims'] }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card h-100" style="border-color:#198754">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:52px;height:52px">
-                    <i class="bi bi-check-circle fs-4 text-success"></i>
-                </div>
-                <div>
-                    <div class="text-muted small">Approved Claims</div>
-                    <div class="fw-bold fs-4">{{ $stats['approved_claims'] }}</div>
+        <a href="{{ route('afad.claims.index') }}" class="stat-card-link">
+            <div class="card stat-card h-100" style="border-color:#198754">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:52px;height:52px">
+                        <i class="bi bi-check-circle fs-4 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Approved Claims</div>
+                        <div class="fw-bold fs-4">{{ $stats['approved_claims'] }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

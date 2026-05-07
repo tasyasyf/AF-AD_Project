@@ -106,8 +106,18 @@ Route::prefix('executive')->name('executive.')->middleware(['auth', 'role:execut
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    // Users / roles
+    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [Admin\UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [Admin\UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [Admin\UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
+
     // Profiles
     Route::get('/profiles', [Admin\ProfileController::class, 'index'])->name('profiles.index');
+    Route::get('/profiles/create', [Admin\ProfileController::class, 'create'])->name('profiles.create');
+    Route::post('/profiles', [Admin\ProfileController::class, 'store'])->name('profiles.store');
     Route::get('/profiles/{profile}', [Admin\ProfileController::class, 'show'])->name('profiles.show');
     Route::get('/profiles/{profile}/edit', [Admin\ProfileController::class, 'edit'])->name('profiles.edit');
     Route::put('/profiles/{profile}', [Admin\ProfileController::class, 'update'])->name('profiles.update');
@@ -115,13 +125,44 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Appointments
     Route::get('/appointments', [Admin\AppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('/appointments/create', [Admin\AppointmentController::class, 'create'])->name('appointments.create');
+    Route::post('/appointments', [Admin\AppointmentController::class, 'store'])->name('appointments.store');
     Route::get('/appointments/{appointment}', [Admin\AppointmentController::class, 'show'])->name('appointments.show');
     Route::get('/appointments/{appointment}/edit', [Admin\AppointmentController::class, 'edit'])->name('appointments.edit');
     Route::put('/appointments/{appointment}', [Admin\AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('/appointments/{appointment}', [Admin\AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
+    // Classes
+    Route::get('/classes', [Admin\ClassController::class, 'index'])->name('classes.index');
+    Route::get('/classes/create', [Admin\ClassController::class, 'create'])->name('classes.create');
+    Route::post('/classes', [Admin\ClassController::class, 'store'])->name('classes.store');
+    Route::get('/classes/{class}', [Admin\ClassController::class, 'show'])->name('classes.show');
+    Route::get('/classes/{class}/edit', [Admin\ClassController::class, 'edit'])->name('classes.edit');
+    Route::put('/classes/{class}', [Admin\ClassController::class, 'update'])->name('classes.update');
+    Route::delete('/classes/{class}', [Admin\ClassController::class, 'destroy'])->name('classes.destroy');
+
+    // Certificates
+    Route::get('/certificates', [Admin\CertificateController::class, 'index'])->name('certificates.index');
+    Route::get('/certificates/create', [Admin\CertificateController::class, 'create'])->name('certificates.create');
+    Route::post('/certificates', [Admin\CertificateController::class, 'store'])->name('certificates.store');
+    Route::get('/certificates/{certificate}/edit', [Admin\CertificateController::class, 'edit'])->name('certificates.edit');
+    Route::put('/certificates/{certificate}', [Admin\CertificateController::class, 'update'])->name('certificates.update');
+    Route::delete('/certificates/{certificate}', [Admin\CertificateController::class, 'destroy'])->name('certificates.destroy');
+
+    // Submissions
+    Route::get('/submissions', [Admin\SubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/create', [Admin\SubmissionController::class, 'create'])->name('submissions.create');
+    Route::post('/submissions', [Admin\SubmissionController::class, 'store'])->name('submissions.store');
+    Route::get('/submissions/{submission}', [Admin\SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/submissions/{submission}/edit', [Admin\SubmissionController::class, 'edit'])->name('submissions.edit');
+    Route::put('/submissions/{submission}', [Admin\SubmissionController::class, 'update'])->name('submissions.update');
+    Route::get('/submissions/{submission}/download', [Admin\SubmissionController::class, 'download'])->name('submissions.download');
+    Route::delete('/submissions/{submission}', [Admin\SubmissionController::class, 'destroy'])->name('submissions.destroy');
+
     // Claims
     Route::get('/claims', [Admin\ClaimController::class, 'index'])->name('claims.index');
+    Route::get('/claims/create', [Admin\ClaimController::class, 'create'])->name('claims.create');
+    Route::post('/claims', [Admin\ClaimController::class, 'store'])->name('claims.store');
     Route::get('/claims/{claim}', [Admin\ClaimController::class, 'show'])->name('claims.show');
     Route::get('/claims/{claim}/edit', [Admin\ClaimController::class, 'edit'])->name('claims.edit');
     Route::put('/claims/{claim}', [Admin\ClaimController::class, 'update'])->name('claims.update');

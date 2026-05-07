@@ -30,21 +30,6 @@
                         @error('claim_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Period From <span class="text-danger">*</span></label>
-                            <input type="date" name="period_from" class="form-control @error('period_from') is-invalid @enderror"
-                                value="{{ old('period_from', $claim->period_from->format('Y-m-d')) }}" required>
-                            @error('period_from') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Period To <span class="text-danger">*</span></label>
-                            <input type="date" name="period_to" class="form-control @error('period_to') is-invalid @enderror"
-                                value="{{ old('period_to', $claim->period_to->format('Y-m-d')) }}" required>
-                            @error('period_to') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                    </div>
-
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Total Hours <span class="text-danger">*</span></label>
@@ -59,6 +44,30 @@
                                 class="form-control @error('rate_per_hour') is-invalid @enderror"
                                 value="{{ old('rate_per_hour', $claim->rate_per_hour) }}" min="0" step="0.01" required>
                             @error('rate_per_hour') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Submission Checklist</label>
+                        <div class="row g-2">
+                            @foreach([
+                                'has_mark_entry_forms' => 'Mark-entry Forms',
+                                'has_graded_scripts' => 'Graded Scripts',
+                                'has_qa' => 'Question Paper & Answer Sheet',
+                            ] as $field => $label)
+                                @php($isSubmitted = $claim->{$field} || ($submissionChecklist[$field] ?? false))
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded px-3 py-2 h-100 {{ $isSubmitted ? 'bg-light' : '' }}">
+                                        <input type="checkbox" value="1"
+                                            class="form-check-input ms-0 me-2" id="{{ $field }}"
+                                            {{ $isSubmitted ? 'checked' : '' }} disabled>
+                                        <label class="form-check-label ps-2" for="{{ $field }}">
+                                            {{ $label }}
+                                            <span class="text-muted small">({{ $isSubmitted ? 'submitted' : 'not submitted yet' }})</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 

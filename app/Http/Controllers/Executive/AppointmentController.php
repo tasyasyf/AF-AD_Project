@@ -39,8 +39,8 @@ class AppointmentController extends Controller
     {
         $data = $request->validate([
             'profile_id'       => ['required', 'exists:profiles,id'],
-            'course_code'      => ['required', 'string', 'max:20'],
-            'course_name'      => ['required', 'string', 'max:255'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'role_type'        => ['required', 'in:af,ad'],
             'semester'         => ['required', 'string', 'max:20'],
             'academic_session' => ['required', 'string', 'max:20'],
@@ -77,8 +77,8 @@ class AppointmentController extends Controller
     public function update(Request $request, Appointment $appointment): RedirectResponse
     {
         $data = $request->validate([
-            'course_code'      => ['required', 'string', 'max:20'],
-            'course_name'      => ['required', 'string', 'max:255'],
+            'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
+            'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'role_type'        => ['required', 'in:af,ad'],
             'semester'         => ['required', 'string', 'max:20'],
             'academic_session' => ['required', 'string', 'max:20'],

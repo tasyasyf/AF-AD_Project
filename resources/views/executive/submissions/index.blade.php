@@ -32,8 +32,10 @@
                         <tr>
                             <th>AF/AD</th>
                             <th>Title</th>
+                            <th>Type</th>
+                            <th>Tutorial / Duration</th>
                             <th>File</th>
-                            <th>Submitted</th>
+                            <th>Submission Date</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -43,13 +45,28 @@
                         <tr>
                             <td class="fw-semibold">{{ $sub->profile->full_name }}</td>
                             <td>{{ $sub->title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ $sub->type_label }}</span></td>
+                            <td class="small text-muted">
+                                @if($sub->isVideoRecording())
+                                    Tutorial {{ $sub->tutorial_number ?? '—' }}<br>
+                                    {{ $sub->video_duration_minutes ? number_format($sub->video_duration_minutes, 2) . ' min' : '—' }}
+                                @elseif($sub->isQuestionBankAnswerSheet())
+                                    {{ $sub->semester_intake ?? '—' }}<br>
+                                    {{ $sub->course ?? '—' }}
+                                @elseif($sub->isMarkEntryForms())
+                                    {{ $sub->course ?? '—' }}<br>
+                                    {{ $sub->programme ?? '—' }}
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="small">
                                 <a href="{{ route('executive.submissions.download', $sub) }}" class="text-decoration-none">
-                                    <i class="bi bi-{{ str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-excel text-success' }} me-1"></i>
+                                    <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
                                     {{ $sub->file_original_name }}
                                 </a>
                             </td>
-                            <td class="small text-muted">{{ $sub->created_at->format('d M Y H:i') }}</td>
+                            <td class="small text-muted">{{ ($sub->submission_date ?? $sub->created_at)->format('d M Y') }}</td>
                             <td>
                                 @if($sub->status === 'reviewed')
                                     <span class="badge bg-success">Reviewed</span>

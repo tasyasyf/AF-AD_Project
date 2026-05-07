@@ -18,14 +18,22 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Course Code <span class="text-danger">*</span></label>
-                        <input type="text" name="course_code" class="form-control @error('course_code') is-invalid @enderror"
-                            value="{{ old('course_code') }}" placeholder="e.g. CSC1234" required>
+                        <select name="course_code" data-course-code class="form-select @error('course_code') is-invalid @enderror" required>
+                            <option value="">Select course...</option>
+                            <option value="CIT400" {{ old('course_code') === 'CIT400' ? 'selected' : '' }}>CIT400</option>
+                            <option value="CRM300" {{ old('course_code') === 'CRM300' ? 'selected' : '' }}>CRM300</option>
+                            <option value="CSC400" {{ old('course_code') === 'CSC400' ? 'selected' : '' }}>CSC400</option>
+                        </select>
                         @error('course_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-8">
                         <label class="form-label fw-semibold">Course Name <span class="text-danger">*</span></label>
-                        <input type="text" name="course_name" class="form-control @error('course_name') is-invalid @enderror"
-                            value="{{ old('course_name') }}" placeholder="e.g. Introduction to Programming" required>
+                        <select name="course_name" data-course-name class="form-select @error('course_name') is-invalid @enderror" required>
+                            <option value="">Select course...</option>
+                            <option value="Industrial Training" {{ old('course_name') === 'Industrial Training' ? 'selected' : '' }}>Industrial Training</option>
+                            <option value="Customer Relationship Management" {{ old('course_name') === 'Customer Relationship Management' ? 'selected' : '' }}>Customer Relationship Management</option>
+                            <option value="Software Construction" {{ old('course_name') === 'Software Construction' ? 'selected' : '' }}>Software Construction</option>
+                        </select>
                         @error('course_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4">
@@ -36,8 +44,12 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Semester <span class="text-danger">*</span></label>
-                        <input type="text" name="semester" class="form-control @error('semester') is-invalid @enderror"
-                            value="{{ old('semester') }}" placeholder="e.g. Semester 1" required>
+                        <select name="semester" class="form-select @error('semester') is-invalid @enderror" required>
+                            <option value="">Select semester...</option>
+                            @foreach(['January', 'May', 'September'] as $semester)
+                                <option value="{{ $semester }}" {{ old('semester') === $semester ? 'selected' : '' }}>{{ $semester }}</option>
+                            @endforeach
+                        </select>
                         @error('semester') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4">
@@ -113,4 +125,20 @@
 </div>
 
 </form>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const codeToName = {
+        CIT400: 'Industrial Training',
+        CRM300: 'Customer Relationship Management',
+        CSC400: 'Software Construction',
+    };
+    const nameToCode = Object.fromEntries(Object.entries(codeToName).map(([code, name]) => [name, code]));
+    document.querySelectorAll('[data-course-code]').forEach(function (codeSelect) {
+        const container = codeSelect.closest('form');
+        const nameSelect = container.querySelector('[data-course-name]');
+        codeSelect.addEventListener('change', () => nameSelect.value = codeToName[codeSelect.value] || '');
+        nameSelect.addEventListener('change', () => codeSelect.value = nameToCode[nameSelect.value] || '');
+    });
+});
+</script>
 </x-layouts.app>

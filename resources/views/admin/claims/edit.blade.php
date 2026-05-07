@@ -35,18 +35,6 @@
                         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Period From <span class="text-danger">*</span></label>
-                        <input type="date" name="period_from" class="form-control @error('period_from') is-invalid @enderror"
-                            value="{{ old('period_from', $claim->period_from->format('Y-m-d')) }}" required>
-                        @error('period_from') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Period To <span class="text-danger">*</span></label>
-                        <input type="date" name="period_to" class="form-control @error('period_to') is-invalid @enderror"
-                            value="{{ old('period_to', $claim->period_to->format('Y-m-d')) }}" required>
-                        @error('period_to') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Total Hours <span class="text-danger">*</span></label>
                         <input type="number" name="total_hours" step="0.01" class="form-control @error('total_hours') is-invalid @enderror"
                             value="{{ old('total_hours', $claim->total_hours) }}" min="0" required>
@@ -62,6 +50,25 @@
                         <label class="form-label fw-semibold">Executive Remarks</label>
                         <textarea name="executive_remarks" class="form-control @error('executive_remarks') is-invalid @enderror" rows="3">{{ old('executive_remarks', $claim->executive_remarks) }}</textarea>
                         @error('executive_remarks') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Submission Checklist</label>
+                        <div class="row g-2">
+                            @foreach([
+                                'has_mark_entry_forms' => 'Mark-entry Forms',
+                                'has_graded_scripts' => 'Graded Scripts',
+                                'has_qa' => 'Question Paper & Answer Sheet',
+                            ] as $field => $label)
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded px-3 py-2 h-100">
+                                        <input type="checkbox" name="{{ $field }}" value="1"
+                                            class="form-check-input ms-0 me-2" id="{{ $field }}"
+                                            {{ old($field, $claim->{$field}) ? 'checked' : '' }}>
+                                        <label class="form-check-label ps-2" for="{{ $field }}">{{ $label }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>

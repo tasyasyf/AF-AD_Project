@@ -1,6 +1,11 @@
 <x-layouts.app title="Appointments">
 
-<h5 class="fw-bold mb-4">All Appointments</h5>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold mb-0">All Appointments</h5>
+    <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-calendar-plus me-1"></i> New Appointment
+    </a>
+</div>
 
 <div class="card mb-3">
     <div class="card-body py-2">

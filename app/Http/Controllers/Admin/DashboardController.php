@@ -15,6 +15,8 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_afad'         => User::where('role', 'afad')->count(),
+            'total_executives'   => User::where('role', 'executive')->count(),
+            'total_admins'       => User::where('role', 'admin')->count(),
             'total_profiles'     => Profile::count(),
             'verified_profiles'  => Profile::verified()->count(),
             'pending_profiles'   => Profile::pending()->count(),

@@ -83,8 +83,6 @@ class ClaimController extends Controller
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
             'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
-            'period_from'    => ['required', 'date'],
-            'period_to'      => ['required', 'date', 'after_or_equal:period_from'],
             'total_hours'    => ['required', 'numeric', 'min:0.5'],
             'rate_per_hour'  => ['required', 'numeric', 'min:0'],
         ]);
@@ -96,6 +94,8 @@ class ClaimController extends Controller
         }
 
         $data['profile_id']   = $profile->id;
+        $data['period_from']  = $appointment->start_date;
+        $data['period_to']    = $appointment->end_date;
         $data['total_amount'] = round($data['total_hours'] * $data['rate_per_hour'], 2);
 
         $claim = Claim::create($data);
