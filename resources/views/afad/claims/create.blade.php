@@ -159,35 +159,35 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Partner Name</label>
-                        <input type="text" id="partner_name" class="form-control" placeholder="Partner / centre name">
+                        <input type="text" name="partner_name" id="partner_name" class="form-control" value="{{ old('partner_name') }}" placeholder="Partner / centre name">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">School</label>
-                        <input type="text" id="school" class="form-control" placeholder="School">
+                        <input type="text" name="school" id="school" class="form-control" value="{{ old('school') }}" placeholder="School">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Learning Centre</label>
-                        <input type="text" id="learning_centre" class="form-control" placeholder="Learning centre">
+                        <input type="text" name="learning_centre" id="learning_centre" class="form-control" value="{{ old('learning_centre') }}" placeholder="Learning centre">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Programme</label>
-                        <select id="programme" class="form-select">
+                        <select name="programme" id="programme" class="form-select">
                             <option value="">Select programme...</option>
                             @foreach(['BBA', 'BICT', 'BDCM'] as $programme)
-                                <option value="{{ $programme }}">{{ $programme }}</option>
+                                <option value="{{ $programme }}" {{ old('programme') === $programme ? 'selected' : '' }}>{{ $programme }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Semester</label>
-                        <input type="text" id="semester_text" class="form-control" placeholder="e.g. May 2026">
+                        <input type="text" name="semester_text" id="semester_text" class="form-control" value="{{ old('semester_text') }}" placeholder="e.g. May 2026">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Semester Intake</label>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach(['jan' => 'January', 'may' => 'May', 'sept' => 'September'] as $value => $label)
                                 <div class="form-check border rounded px-3 py-2">
-                                    <input class="form-check-input ms-0 me-2 semester-intake" type="checkbox" value="{{ $value }}" id="intake_{{ $value }}">
+                                    <input class="form-check-input ms-0 me-2 semester-intake" type="checkbox" name="semester_intake[]" value="{{ $value }}" id="intake_{{ $value }}" {{ in_array($value, old('semester_intake', []), true) ? 'checked' : '' }}>
                                     <label class="form-check-label ps-2" for="intake_{{ $value }}">{{ $label }}</label>
                                 </div>
                             @endforeach
@@ -292,6 +292,7 @@
                             'has_mark_entry_forms' => 'Mark-entry Forms',
                             'has_graded_scripts' => 'Graded Scripts',
                             'has_qa' => 'Question Paper & Answer Sheet',
+                            'has_question_bank_answer_sheet' => 'QB-AS',
                         ] as $field => $label)
                             <div class="col-md-6">
                                 @php($isSubmitted = $submissionChecklist[$field] ?? false)
@@ -307,24 +308,6 @@
                             </div>
                         @endforeach
                     </div>
-                    @if(($uploadedSubmissions ?? collect())->isNotEmpty())
-                        <div class="border rounded mt-3 p-3 bg-light">
-                            <div class="fw-semibold small mb-2">Uploaded submissions included</div>
-                            <div class="vstack gap-2">
-                                @foreach($uploadedSubmissions as $submission)
-                                    <div class="d-flex justify-content-between gap-3 small">
-                                        <span>
-                                            <i class="bi bi-check2 text-success me-1"></i>
-                                            {{ $submission->type_label }} - {{ $submission->title }}
-                                        </span>
-                                        <span class="text-muted text-nowrap">
-                                            {{ $submission->submission_date?->format('d M Y') ?? $submission->created_at->format('d M Y') }}
-                                        </span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
                 <div class="alert alert-light border d-flex align-items-center gap-2 mb-0">
@@ -344,6 +327,10 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
+                        <label class="form-label fw-semibold">Account Holder Name</label>
+                        <input type="text" class="form-control" value="{{ $profile->bank_account_holder }}" disabled>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Bank Account Number</label>
                         <input type="text" class="form-control" value="{{ $profile->bank_account_number }}" disabled>
                     </div>
@@ -359,8 +346,11 @@
             <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#printPreviewModal" id="preview-print-btn">
                 <i class="bi bi-eye me-1"></i> Preview Print Form
             </button>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" name="action" value="draft" class="btn btn-outline-primary">
                 <i class="bi bi-save me-1"></i> Save as Draft
+            </button>
+            <button type="submit" name="action" value="submit" class="btn btn-primary">
+                <i class="bi bi-send-fill me-1"></i> Submit Claim
             </button>
         </div>
     </div>
@@ -502,6 +492,7 @@
                     </table>
 
                     <div class="fw-semibold text-decoration-underline mb-2">Bank Details</div>
+                    <div class="print-line-field"><span>Account Holder Name</span><span class="print-line">{{ $profile->bank_account_holder }}</span></div>
                     <div class="print-line-field"><span>Bank Account Number</span><span class="print-line">{{ $profile->bank_account_number }}</span></div>
                     <div class="print-line-field mb-3"><span>Bank Name</span><span class="print-line">{{ $profile->bank_name }}</span></div>
 

@@ -54,6 +54,13 @@
     </div>
 @endif
 
+@php
+    $formData = $claim->claim_form_data ?? [];
+    $intakeLabels = collect($formData['semester_intake'] ?? [])
+        ->map(fn($value) => ['jan' => 'January', 'may' => 'May', 'sept' => 'September'][$value] ?? ucfirst($value))
+        ->implode(', ');
+@endphp
+
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="card mb-4">
@@ -67,6 +74,22 @@
                     <dd class="col-sm-8 fw-semibold">{{ $claim->claim_reference }}</dd>
                     <dt class="col-sm-4 text-muted">Course</dt>
                     <dd class="col-sm-8">{{ $claim->appointment->course_code }} – {{ $claim->appointment->course_name }}</dd>
+                    <dt class="col-sm-4 text-muted">Name</dt>
+                    <dd class="col-sm-8">{{ $claim->profile->full_name }}</dd>
+                    <dt class="col-sm-4 text-muted">NRIC</dt>
+                    <dd class="col-sm-8">{{ $claim->profile->ic_number }}</dd>
+                    <dt class="col-sm-4 text-muted">Partner Name</dt>
+                    <dd class="col-sm-8">{{ $formData['partner_name'] ?? '-' }}</dd>
+                    <dt class="col-sm-4 text-muted">School</dt>
+                    <dd class="col-sm-8">{{ $formData['school'] ?? '-' }}</dd>
+                    <dt class="col-sm-4 text-muted">Learning Centre</dt>
+                    <dd class="col-sm-8">{{ $formData['learning_centre'] ?? '-' }}</dd>
+                    <dt class="col-sm-4 text-muted">Programme</dt>
+                    <dd class="col-sm-8">{{ $formData['programme'] ?? '-' }}</dd>
+                    <dt class="col-sm-4 text-muted">Semester</dt>
+                    <dd class="col-sm-8">{{ $formData['semester_text'] ?? $claim->appointment->semester }}</dd>
+                    <dt class="col-sm-4 text-muted">Semester Intake</dt>
+                    <dd class="col-sm-8">{{ $intakeLabels ?: '-' }}</dd>
                     <dt class="col-sm-4 text-muted">Claim Types</dt>
                     <dd class="col-sm-8">
                         <div class="table-responsive">
@@ -114,10 +137,16 @@
                 <hr>
                 <div class="text-muted small fw-semibold mb-2">Submission Checklist</div>
                 <div class="row g-2">
+                    <div class="col-md-6">
+                        <span class="badge bg-{{ $hasRecordingSubmission ? 'success' : 'secondary' }}">
+                            <i class="bi bi-{{ $hasRecordingSubmission ? 'check2' : 'dash' }} me-1"></i>Video Recording Submission
+                        </span>
+                    </div>
                     @foreach([
                         'has_mark_entry_forms' => 'Mark-entry Forms',
                         'has_graded_scripts' => 'Graded Scripts',
                         'has_qa' => 'Question Paper & Answer Sheet',
+                        'has_question_bank_answer_sheet' => 'QB-AS',
                     ] as $field => $label)
                         <div class="col-md-6">
                             <span class="badge bg-{{ $claim->{$field} ? 'success' : 'secondary' }}">
@@ -129,9 +158,65 @@
             </div>
         </div>
 
+        @include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
+
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Supporting Documents</div>
+            <div class="card-body p-0">
+                @if($claim->documents->isEmpty())
+                    <div class="text-center text-muted py-4">No supporting document checklist available.</div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Document</th>
+                                    <th>Required</th>
+                                    <th>Uploaded File</th>
+                                    <th>Uploaded At</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($claim->documents as $document)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $document->label }}</td>
+                                        <td>{{ $document->is_required ? 'Required' : 'Optional' }}</td>
+                                        <td>{{ $document->file_original_name ?? '-' }}</td>
+                                        <td>{{ $document->uploaded_at?->format('d M Y H:i') ?? '-' }}</td>
+                                        <td>
+                                            @if($document->is_uploaded)
+                                                <span class="badge bg-success">Uploaded</span>
+                                            @else
+                                                <span class="badge bg-secondary">Not uploaded</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+
     </div>
 
     <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Bank Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted">Account Holder</dt>
+                    <dd class="col-sm-7">{{ $claim->profile->bank_account_holder ?? '-' }}</dd>
+                    <dt class="col-sm-5 text-muted">Account Number</dt>
+                    <dd class="col-sm-7">{{ $claim->profile->bank_account_number ?? '-' }}</dd>
+                    <dt class="col-sm-5 text-muted">Bank Name</dt>
+                    <dd class="col-sm-7">{{ $claim->profile->bank_name ?? '-' }}</dd>
+                </dl>
+            </div>
+        </div>
+
         <!-- Audit Trail -->
         <div class="card">
             <div class="card-header bg-white fw-semibold">Activity Log</div>
@@ -155,6 +240,6 @@
     </div>
 </div>
 
-@include('afad.claims.partials.print-preview-saved', ['claim' => $claim, 'videoRecordingRows' => $videoRecordingRows])
+@include('afad.claims.partials.print-preview-saved', ['claim' => $claim, 'videoRecordingRows' => $videoRecordingRows, 'uploadedSubmissions' => $uploadedSubmissions])
 
 </x-layouts.app>

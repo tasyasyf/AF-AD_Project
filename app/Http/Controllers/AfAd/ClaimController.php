@@ -53,6 +53,14 @@ class ClaimController extends Controller
             'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
             'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
             'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
+            'partner_name' => ['nullable', 'string', 'max:150'],
+            'school' => ['nullable', 'string', 'max:150'],
+            'learning_centre' => ['nullable', 'string', 'max:150'],
+            'programme' => ['nullable', 'string', 'max:50'],
+            'semester_text' => ['nullable', 'string', 'max:100'],
+            'semester_intake' => ['nullable', 'array'],
+            'semester_intake.*' => ['string', 'in:jan,may,sept'],
+            'action' => ['nullable', 'in:draft,submit'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
             'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
@@ -71,6 +79,7 @@ class ClaimController extends Controller
         $data['period_to']    = $appointment->end_date;
         $data['claim_type'] = $firstItem['claim_type'];
         $data['claim_items'] = $claimItems;
+        $data['claim_form_data'] = $this->claimFormData($data);
         $data['total_hours'] = round(collect($claimItems)->sum('total_hours'), 2);
         $data['rate_per_hour'] = $firstItem['rate'];
         $data['total_amount'] = round(collect($claimItems)->sum('amount') + ($submissionTotals['amount'] ?? 0), 2);
@@ -83,6 +92,18 @@ class ClaimController extends Controller
 
         ClaimAudit::record($claim, 'created', null, 'draft');
 
+        if (($data['action'] ?? 'draft') === 'submit') {
+            $claim->update([
+                'status' => 'submitted',
+                'submitted_at' => now(),
+            ]);
+
+            ClaimAudit::record($claim, 'submitted', 'draft', 'submitted');
+
+            return redirect()->route('afad.claims.index')
+                ->with('success', 'Claim submitted successfully.');
+        }
+
         return redirect()->route('afad.claims.show', $claim)
             ->with('success', 'Claim created as draft. Please upload required documents before submitting.');
     }
@@ -92,7 +113,11 @@ class ClaimController extends Controller
         abort_if($claim->profile->user_id !== auth()->id(), 403);
         $claim->load(['appointment', 'documents', 'audits.performer', 'pcEndorser']);
         $uploadedSubmissions = $this->uploadedSubmissions($claim->profile);
-        return view('afad.claims.show', compact('claim', 'uploadedSubmissions'));
+        $videoRecordingRows = $this->videoRecordingClaimRows($claim->profile);
+        $hasRecordingSubmission = $claim->profile->submissions()
+            ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
+            ->exists();
+        return view('afad.claims.show', compact('claim', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
     }
 
     public function edit(Claim $claim): View|RedirectResponse
@@ -106,7 +131,10 @@ class ClaimController extends Controller
         $submissionTotals = $this->submissionAmountDefaults($profile);
         $uploadedSubmissions = $this->uploadedSubmissions($profile);
         $videoRecordingRows = $this->videoRecordingClaimRows($profile);
-        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows'));
+        $hasRecordingSubmission = $profile->submissions()
+            ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
+            ->exists();
+        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
     }
 
     public function update(Request $request, Claim $claim): RedirectResponse
@@ -119,6 +147,13 @@ class ClaimController extends Controller
             'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
             'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
             'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
+            'partner_name' => ['nullable', 'string', 'max:150'],
+            'school' => ['nullable', 'string', 'max:150'],
+            'learning_centre' => ['nullable', 'string', 'max:150'],
+            'programme' => ['nullable', 'string', 'max:50'],
+            'semester_text' => ['nullable', 'string', 'max:100'],
+            'semester_intake' => ['nullable', 'array'],
+            'semester_intake.*' => ['string', 'in:jan,may,sept'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
             'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
@@ -135,6 +170,7 @@ class ClaimController extends Controller
         $data['period_to'] = $claim->appointment->end_date;
         $data['claim_type'] = $firstItem['claim_type'];
         $data['claim_items'] = $claimItems;
+        $data['claim_form_data'] = $this->claimFormData($data);
         $data['total_hours'] = round(collect($claimItems)->sum('total_hours'), 2);
         $data['rate_per_hour'] = $firstItem['rate'];
         $data['total_amount'] = round(collect($claimItems)->sum('amount') + ($submissionTotals['amount'] ?? 0), 2);
@@ -234,6 +270,18 @@ class ClaimController extends Controller
             ->all();
     }
 
+    private function claimFormData(array $data): array
+    {
+        return [
+            'partner_name' => $data['partner_name'] ?? null,
+            'school' => $data['school'] ?? null,
+            'learning_centre' => $data['learning_centre'] ?? null,
+            'programme' => $data['programme'] ?? null,
+            'semester_text' => $data['semester_text'] ?? null,
+            'semester_intake' => $data['semester_intake'] ?? [],
+        ];
+    }
+
     private function teachingHoursError(array $items): ?array
     {
         foreach ($items as $index => $item) {
@@ -294,6 +342,7 @@ class ClaimController extends Controller
                 'rate_per_hour',
                 'total_amount',
                 'status',
+                'created_at',
             ]);
     }
 

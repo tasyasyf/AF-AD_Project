@@ -1,4 +1,7 @@
 @php
+    $formData = $claim->claim_form_data ?? [];
+    $selectedIntakes = $formData['semester_intake'] ?? [];
+    $uploadedSubmissions = $uploadedSubmissions ?? collect();
     $videoRecordingRows = $videoRecordingRows ?? [];
     $printRows = array_slice(array_pad($videoRecordingRows, 4, null), 0, 4);
     $videoRecordingTotal = collect($videoRecordingRows)->sum('amount');
@@ -12,7 +15,7 @@
     .print-line-field { display: grid; grid-template-columns: 132px 1fr; align-items: end; gap: 0.6rem; min-height: 32px; }
     .print-line { border-bottom: 1px solid #222; min-height: 24px; padding: 0 0.25rem; }
     .print-boxes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 20px; }
-    .print-boxes span { width: 20px; height: 20px; border: 1px solid #222; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
+    .print-boxes span, .print-semester-box { width: 20px; height: 20px; border: 1px solid #222; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
     .print-claim-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
     .print-claim-table th, .print-claim-table td { border: 1px solid #222; padding: 0.32rem; vertical-align: middle; }
     .print-claim-table th { text-align: center; font-weight: 700; }
@@ -54,8 +57,8 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <div class="print-line-field"><span>Name</span><span class="print-line">{{ $claim->profile->full_name }}</span></div>
-                            <div class="print-line-field"><span>Partner Name</span><span class="print-line"></span></div>
-                            <div class="print-line-field"><span>Learning Centre</span><span class="print-line"></span></div>
+                            <div class="print-line-field"><span>Partner Name</span><span class="print-line">{{ $formData['partner_name'] ?? '' }}</span></div>
+                            <div class="print-line-field"><span>Learning Centre</span><span class="print-line">{{ $formData['learning_centre'] ?? '' }}</span></div>
                         </div>
                         <div class="col-md-6">
                             <div class="print-line-field">
@@ -66,9 +69,17 @@
                                     @endforeach
                                 </span>
                             </div>
-                            <div class="print-line-field"><span>School</span><span class="print-line"></span></div>
-                            <div class="print-line-field"><span>Programme</span><span class="print-line">{{ $claim->appointment->programme ?? '' }}</span></div>
-                            <div class="print-line-field"><span>Semester</span><span class="print-line">{{ $claim->appointment->semester }}</span></div>
+                            <div class="print-line-field"><span>School</span><span class="print-line">{{ $formData['school'] ?? '' }}</span></div>
+                            <div class="print-line-field"><span>Programme</span><span class="print-line">{{ $formData['programme'] ?? ($claim->appointment->programme ?? '') }}</span></div>
+                            <div class="print-line-field"><span>Semester</span><span class="print-line">{{ $formData['semester_text'] ?? $claim->appointment->semester }}</span></div>
+                            <div class="print-line-field">
+                                <span>Intake</span>
+                                <span class="d-flex align-items-center gap-3">
+                                    <span><span class="print-semester-box">{{ in_array('jan', $selectedIntakes, true) ? '✓' : '' }}</span> January</span>
+                                    <span><span class="print-semester-box">{{ in_array('may', $selectedIntakes, true) ? '✓' : '' }}</span> May</span>
+                                    <span><span class="print-semester-box">{{ in_array('sept', $selectedIntakes, true) ? '✓' : '' }}</span> September</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -141,8 +152,70 @@
                     </table>
 
                     <div class="fw-semibold text-decoration-underline mb-2">Bank Details</div>
+                    <div class="print-line-field"><span>Account Holder Name</span><span class="print-line">{{ $claim->profile->bank_account_holder }}</span></div>
                     <div class="print-line-field"><span>Bank Account Number</span><span class="print-line">{{ $claim->profile->bank_account_number }}</span></div>
                     <div class="print-line-field mb-3"><span>Bank Name</span><span class="print-line">{{ $claim->profile->bank_name }}</span></div>
+
+                    @if($uploadedSubmissions->isNotEmpty())
+                        <div class="fw-semibold mb-1">Uploaded Submissions</div>
+                        <table class="print-claim-table mb-3">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px">No</th>
+                                    <th>Title</th>
+                                    <th style="width:150px">Type</th>
+                                    <th style="width:120px">Course</th>
+                                    <th style="width:80px">Hours</th>
+                                    <th style="width:80px">Rate</th>
+                                    <th style="width:90px">Amount</th>
+                                    <th style="width:90px">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($uploadedSubmissions as $submission)
+                                    <tr>
+                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                        <td>{{ $submission->title }}</td>
+                                        <td>{{ $submission->type_label }}</td>
+                                        <td>{{ $submission->course ?? '-' }}</td>
+                                        <td class="text-center">{{ $submission->claim_hours ? number_format((float) $submission->claim_hours, 2) : '-' }}</td>
+                                        <td class="text-center">{{ $submission->rate_per_hour ? number_format((float) $submission->rate_per_hour, 2) : '-' }}</td>
+                                        <td class="text-end">{{ $submission->total_amount ? 'RM ' . number_format((float) $submission->total_amount, 2) : '-' }}</td>
+                                        <td>{{ $submission->submission_date?->format('d/m/Y') ?? $submission->created_at?->format('d/m/Y') ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+
+                    @if($claim->documents->isNotEmpty())
+                        <div class="fw-semibold mb-1">Supporting Documents</div>
+                        <table class="print-claim-table mb-3">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px">No</th>
+                                    <th>Document</th>
+                                    <th style="width:95px">Required</th>
+                                    <th>Uploaded File</th>
+                                    <th style="width:95px">Uploaded At</th>
+                                    <th style="width:85px">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($claim->documents as $document)
+                                    <tr>
+                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                        <td>{{ $document->label }}</td>
+                                        <td class="text-center">{{ $document->is_required ? 'Yes' : 'No' }}</td>
+                                        <td>{{ $document->file_original_name ?? '-' }}</td>
+                                        <td>{{ $document->uploaded_at?->format('d/m/Y') ?? '-' }}</td>
+                                        <td class="text-center">{{ $document->is_uploaded ? 'Uploaded' : '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+
                     <div class="small text-muted">Version 2.0, 22nd July 2020</div>
                 </div>
             </div>
