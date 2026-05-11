@@ -82,7 +82,7 @@ class ClaimController extends Controller
 
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
-            'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_type'     => ['required', 'in:teaching,module_development,consultation'],
             'total_hours'    => ['required', 'numeric', 'min:0.5'],
             'rate_per_hour'  => ['required', 'numeric', 'min:0'],
         ]);

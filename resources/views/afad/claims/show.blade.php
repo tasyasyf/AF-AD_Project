@@ -142,6 +142,11 @@
                             <i class="bi bi-{{ $hasRecordingSubmission ? 'check2' : 'dash' }} me-1"></i>Video Recording Submission
                         </span>
                     </div>
+                    <div class="col-md-6">
+                        <span class="badge bg-{{ $hasAttendanceSubmission ? 'success' : 'secondary' }}">
+                            <i class="bi bi-{{ $hasAttendanceSubmission ? 'check2' : 'dash' }} me-1"></i>Attendance Sheet
+                        </span>
+                    </div>
                     @foreach([
                         'has_mark_entry_forms' => 'Mark-entry Forms',
                         'has_graded_scripts' => 'Graded Scripts',
@@ -159,46 +164,6 @@
         </div>
 
         @include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
-
-        <div class="card mb-4">
-            <div class="card-header bg-white fw-semibold">Supporting Documents</div>
-            <div class="card-body p-0">
-                @if($claim->documents->isEmpty())
-                    <div class="text-center text-muted py-4">No supporting document checklist available.</div>
-                @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Document</th>
-                                    <th>Required</th>
-                                    <th>Uploaded File</th>
-                                    <th>Uploaded At</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($claim->documents as $document)
-                                    <tr>
-                                        <td class="fw-semibold">{{ $document->label }}</td>
-                                        <td>{{ $document->is_required ? 'Required' : 'Optional' }}</td>
-                                        <td>{{ $document->file_original_name ?? '-' }}</td>
-                                        <td>{{ $document->uploaded_at?->format('d M Y H:i') ?? '-' }}</td>
-                                        <td>
-                                            @if($document->is_uploaded)
-                                                <span class="badge bg-success">Uploaded</span>
-                                            @else
-                                                <span class="badge bg-secondary">Not uploaded</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
-        </div>
 
     </div>
 

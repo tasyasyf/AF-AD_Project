@@ -106,7 +106,7 @@
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold">Claim Type</label>
                                         <select name="claim_items[{{ $index }}][claim_type]" class="form-select claim-type" required>
-                                            @foreach(['teaching'=>'Teaching','marking'=>'Marking','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
+                                            @foreach(['teaching'=>'Teaching','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
                                                 <option value="{{ $val }}" {{ ($item['claim_type'] ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
                                         </select>
@@ -157,6 +157,16 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-check border rounded px-3 py-2 h-100 {{ $hasAttendanceSubmission ? 'bg-light' : '' }}">
+                                <input type="checkbox" class="form-check-input ms-0 me-2" id="has_attendance_sheet"
+                                    {{ $hasAttendanceSubmission ? 'checked' : '' }} disabled>
+                                <label class="form-check-label ps-2" for="has_attendance_sheet">
+                                    Attendance Sheet
+                                    <span class="text-muted small">({{ $hasAttendanceSubmission ? 'submitted' : 'not submitted yet' }})</span>
+                                </label>
+                            </div>
+                        </div>
                         @foreach([
                             'has_mark_entry_forms' => 'Mark-entry Forms',
                             'has_graded_scripts' => 'Graded Scripts',
@@ -190,46 +200,6 @@
         </div>
 
         @include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
-
-        <div class="card mb-4">
-            <div class="card-header bg-white fw-semibold">Supporting Documents</div>
-            <div class="card-body p-0">
-                @if($claim->documents->isEmpty())
-                    <div class="text-center text-muted py-4">No supporting document checklist available.</div>
-                @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Document</th>
-                                    <th>Required</th>
-                                    <th>Uploaded File</th>
-                                    <th>Uploaded At</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($claim->documents as $document)
-                                    <tr>
-                                        <td class="fw-semibold">{{ $document->label }}</td>
-                                        <td>{{ $document->is_required ? 'Required' : 'Optional' }}</td>
-                                        <td>{{ $document->file_original_name ?? '-' }}</td>
-                                        <td>{{ $document->uploaded_at?->format('d M Y H:i') ?? '-' }}</td>
-                                        <td>
-                                            @if($document->is_uploaded)
-                                                <span class="badge bg-success">Uploaded</span>
-                                            @else
-                                                <span class="badge bg-secondary">Not uploaded</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
-        </div>
 
         <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Bank Details</div>
@@ -307,7 +277,7 @@ document.getElementById('add-claim-type').addEventListener('click', function () 
     const container = document.getElementById('claim-items');
     const template = container.querySelector('.claim-item').cloneNode(true);
     template.querySelectorAll('input').forEach((input) => input.value = '');
-    template.querySelector('.claim-type').value = 'marking';
+    template.querySelector('.claim-type').value = 'module_development';
     container.appendChild(template);
     reindexClaimItems();
     updateTotal();

@@ -48,7 +48,7 @@ class SubmissionController extends Controller
             'video_url' => ['nullable', 'url', 'max:500'],
             'video_duration_seconds' => ['nullable', 'numeric', 'min:0', 'max:86400'],
             'claim_hours' => ['nullable', 'numeric', 'min:0', 'max:9999'],
-            'rate_per_hour' => ['required', 'numeric', 'min:0', 'max:999999'],
+            'rate_per_hour' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'semester_intake' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_QUESTION_BANK_ANSWER_SHEET, 'string', 'in:January,May,September'],
             'course' => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
             'course_name' => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
@@ -57,22 +57,35 @@ class SubmissionController extends Controller
         ]);
 
         $isVideoRecording = $data['submission_type'] === Submission::TYPE_VIDEO_RECORDING;
+        $isAttendanceSheet = $data['submission_type'] === Submission::TYPE_ATTENDANCE_SHEET;
         $isQuestionBankAnswerSheet = $data['submission_type'] === Submission::TYPE_QUESTION_BANK_ANSWER_SHEET;
 
         if ($isVideoRecording) {
             $request->validate([
                 'video_url' => ['required', 'url', 'max:500'],
+                'rate_per_hour' => ['required', 'numeric', 'min:0', 'max:999999'],
             ], [
                 'video_url.required' => 'Please paste the video recording link.',
                 'video_url.url' => 'Please enter a valid video recording link.',
+                'rate_per_hour.required' => 'Please enter the rate per hour for this recording.',
+            ]);
+        } elseif ($isAttendanceSheet) {
+            $request->validate([
+                'file' => ['required', 'mimes:pdf,xls,xlsx,csv', 'max:5120'],
+            ], [
+                'file.required' => 'Please upload the attendance sheet file.',
+                'file.mimes' => 'Attendance sheet must be uploaded as PDF or Excel.',
+                'file.max' => 'Attendance sheet must not exceed 5MB.',
             ]);
         } else {
             $request->validate([
                 'file' => ['required', 'mimes:pdf', 'max:5120'],
+                'rate_per_hour' => ['required', 'numeric', 'min:0', 'max:999999'],
             ], [
                 'file.required' => 'Please upload the required PDF file.',
                 'file.mimes' => 'This submission type must be uploaded as a PDF file.',
                 'file.max' => 'PDF submissions must not exceed 5MB.',
+                'rate_per_hour.required' => 'Please enter the rate for this submission.',
             ]);
         }
 
@@ -83,10 +96,12 @@ class SubmissionController extends Controller
         $claimHours = $isVideoRecording && $videoDurationSeconds > 0
             ? round($videoDurationSeconds / 3600, 2)
             : null;
-        $submissionRate = (float) $data['rate_per_hour'];
-        $submissionTotalAmount = $isVideoRecording
-            ? ($claimHours !== null ? round($claimHours * $submissionRate, 2) : null)
-            : round($submissionRate, 2);
+        $submissionRate = $isAttendanceSheet ? null : (float) $data['rate_per_hour'];
+        $submissionTotalAmount = $isAttendanceSheet
+            ? null
+            : ($isVideoRecording
+                ? ($claimHours !== null ? round($claimHours * $submissionRate, 2) : null)
+                : round($submissionRate, 2));
 
         if (!$isVideoRecording) {
             $data['tutorial_number'] = null;

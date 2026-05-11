@@ -235,7 +235,7 @@
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold">Claim Type</label>
                                         <select name="claim_items[{{ $index }}][claim_type]" class="form-select claim-type" required>
-                                            @foreach(['teaching'=>'Teaching','marking'=>'Marking','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
+                                            @foreach(['teaching'=>'Teaching','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
                                                 <option value="{{ $val }}" {{ ($item['claim_type'] ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
                                         </select>
@@ -285,6 +285,16 @@
                                 <label class="form-check-label ps-2" for="has_recording_link">
                                     Recording Link
                                     <span class="text-muted small">({{ $hasRecordingSubmission ? 'submitted' : 'not submitted yet' }})</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check border rounded px-3 py-2 h-100 {{ $hasAttendanceSubmission ? 'bg-light' : '' }}">
+                                <input type="checkbox" class="form-check-input ms-0 me-2" id="has_attendance_sheet"
+                                    {{ $hasAttendanceSubmission ? 'checked' : '' }} disabled>
+                                <label class="form-check-label ps-2" for="has_attendance_sheet">
+                                    Attendance Sheet
+                                    <span class="text-muted small">({{ $hasAttendanceSubmission ? 'submitted' : 'not submitted yet' }})</span>
                                 </label>
                             </div>
                         </div>
@@ -470,7 +480,7 @@
                         <thead>
                             <tr>
                                 <th style="width:42px">No</th>
-                                <th>Payment Details <em>(i.e: Marking Assignments etc)</em></th>
+                                <th>Payment Details</th>
                                 <th style="width:150px">No of Assignments</th>
                                 <th style="width:90px">Rate</th>
                                 <th style="width:90px">RM</th>
@@ -500,6 +510,7 @@
                     <div class="row g-2 mb-3">
                         @foreach([
                             'has_recording_link' => 'Recording Link',
+                            'has_attendance_sheet' => 'Attendance Sheet',
                             'has_mark_entry_forms' => 'Mark-entry Forms',
                             'has_graded_scripts' => 'Graded Scripts',
                             'has_qa' => 'Question Paper & Answer Sheet',
@@ -655,6 +666,7 @@ function syncPrintPreview() {
 
     [
         'has_recording_link',
+        'has_attendance_sheet',
         'has_mark_entry_forms',
         'has_graded_scripts',
         'has_qa',
@@ -670,7 +682,7 @@ document.getElementById('add-claim-type').addEventListener('click', function () 
     const container = document.getElementById('claim-items');
     const template = container.querySelector('.claim-item').cloneNode(true);
     template.querySelectorAll('input').forEach((input) => input.value = '');
-    template.querySelector('.claim-type').value = 'marking';
+    template.querySelector('.claim-type').value = 'module_development';
     container.appendChild(template);
     reindexClaimItems();
     updateTotal();

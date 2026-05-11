@@ -67,11 +67,11 @@ class ClaimSeeder extends Seeder
         ClaimAudit::create(['claim_id' => $claim2->id, 'performed_by' => $afad1User->id, 'action' => 'created', 'from_status' => null, 'to_status' => 'draft', 'created_at' => now()->subDays(8)]);
         ClaimAudit::create(['claim_id' => $claim2->id, 'performed_by' => $afad1User->id, 'action' => 'submitted', 'from_status' => 'draft', 'to_status' => 'submitted', 'created_at' => now()->subDays(5)]);
 
-        // Claim 3: Draft (marking for BBB1013)
+        // Claim 3: Draft (consultation for BBB1013)
         $claim3 = Claim::create([
             'appointment_id' => $appt1->id,
             'profile_id'     => $profile1->id,
-            'claim_type'     => 'marking',
+            'claim_type'     => 'consultation',
             'period_from'    => '2024-11-01',
             'period_to'      => '2024-12-15',
             'total_hours'    => 15,
@@ -79,10 +79,6 @@ class ClaimSeeder extends Seeder
             'total_amount'   => 675.00,
             'status'         => 'draft',
         ]);
-
-        ClaimDocument::create(['claim_id' => $claim3->id, 'document_type' => 'marking_scheme', 'label' => 'Marking Scheme', 'is_required' => true, 'is_uploaded' => false, 'sort_order' => 1]);
-        ClaimDocument::create(['claim_id' => $claim3->id, 'document_type' => 'assignment_sample', 'label' => 'Assignment Sample', 'is_required' => true, 'is_uploaded' => false, 'sort_order' => 2]);
-        ClaimDocument::create(['claim_id' => $claim3->id, 'document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => false, 'is_uploaded' => false, 'sort_order' => 3]);
 
         ClaimAudit::create(['claim_id' => $claim3->id, 'performed_by' => $afad1User->id, 'action' => 'created', 'from_status' => null, 'to_status' => 'draft', 'created_at' => now()->subDays(2)]);
     }

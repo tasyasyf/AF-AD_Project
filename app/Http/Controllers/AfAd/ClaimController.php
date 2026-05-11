@@ -39,7 +39,10 @@ class ClaimController extends Controller
         $hasRecordingSubmission = $profile->submissions()
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
+        $hasAttendanceSubmission = $profile->submissions()
+            ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
+            ->exists();
+        return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -50,7 +53,7 @@ class ClaimController extends Controller
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
             'claim_items' => ['required', 'array', 'min:1'],
-            'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_items.*.claim_type' => ['required', 'in:teaching,module_development,consultation'],
             'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
             'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
             'partner_name' => ['nullable', 'string', 'max:150'],
@@ -87,7 +90,6 @@ class ClaimController extends Controller
 
         $claim = Claim::create($data);
 
-        // Create default document checklist based on claim type
         $this->createDocumentChecklist($claim);
 
         ClaimAudit::record($claim, 'created', null, 'draft');
@@ -117,7 +119,10 @@ class ClaimController extends Controller
         $hasRecordingSubmission = $claim->profile->submissions()
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        return view('afad.claims.show', compact('claim', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
+        $hasAttendanceSubmission = $claim->profile->submissions()
+            ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
+            ->exists();
+        return view('afad.claims.show', compact('claim', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
     }
 
     public function edit(Claim $claim): View|RedirectResponse
@@ -134,7 +139,10 @@ class ClaimController extends Controller
         $hasRecordingSubmission = $profile->submissions()
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
+        $hasAttendanceSubmission = $profile->submissions()
+            ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
+            ->exists();
+        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
     }
 
     public function update(Request $request, Claim $claim): RedirectResponse
@@ -144,7 +152,7 @@ class ClaimController extends Controller
 
         $data = $request->validate([
             'claim_items' => ['required', 'array', 'min:1'],
-            'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_items.*.claim_type' => ['required', 'in:teaching,module_development,consultation'],
             'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
             'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
             'partner_name' => ['nullable', 'string', 'max:150'],
@@ -188,11 +196,6 @@ class ClaimController extends Controller
         abort_if($claim->profile->user_id !== auth()->id(), 403);
         abort_if(!in_array($claim->status, ['draft', 'returned']), 403);
 
-        $requiredDocs = $claim->documents()->where('is_required', true)->where('is_uploaded', false)->count();
-        if ($requiredDocs > 0) {
-            return back()->with('error', "Please upload all {$requiredDocs} required document(s) before submitting.");
-        }
-
         $claim->update([
             'status'       => 'submitted',
             'submitted_at' => now(),
@@ -215,40 +218,14 @@ class ClaimController extends Controller
 
     private function createDocumentChecklist(Claim $claim): void
     {
-        $documents = [];
-        foreach (collect($claim->displayClaimItems())->pluck('claim_type')->unique()->values() as $claimType) {
-            $documents = array_merge($documents, $this->documentsForClaimType($claimType));
-        }
-
-        foreach (collect($documents)->unique('document_type')->values() as $index => $doc) {
-            $doc['sort_order'] = $index + 1;
-            ClaimDocument::create(array_merge($doc, ['claim_id' => $claim->id]));
-        }
+        $claim->documents()->delete();
     }
 
     private function documentsForClaimType(string $claimType): array
     {
-        return match ($claimType) {
-            'teaching' => [
-                ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => true],
-                ['document_type' => 'lesson_plan', 'label' => 'Lesson Plan', 'is_required' => true],
-                ['document_type' => 'student_list', 'label' => 'Student List', 'is_required' => false],
-            ],
-            'marking' => [
-                ['document_type' => 'marking_scheme', 'label' => 'Marking Scheme', 'is_required' => true],
-                ['document_type' => 'assignment_sample', 'label' => 'Assignment Sample', 'is_required' => true],
-                ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => false],
-            ],
-            'module_development' => [
-                ['document_type' => 'lesson_plan', 'label' => 'Module Draft / Outline', 'is_required' => true],
-                ['document_type' => 'other', 'label' => 'Approval Letter', 'is_required' => true],
-            ],
-            'consultation' => [
-                ['document_type' => 'attendance_sheet', 'label' => 'Consultation Record', 'is_required' => true],
-                ['document_type' => 'other', 'label' => 'Supporting Document', 'is_required' => false],
-            ],
-            default => [],
-        };
+        return [
+            ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => true],
+        ];
     }
 
     private function normalizeClaimItems(array $items): array

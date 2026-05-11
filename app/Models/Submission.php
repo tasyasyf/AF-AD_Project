@@ -20,6 +20,7 @@ class Submission extends Model
     use HasFactory;
 
     public const TYPE_VIDEO_RECORDING = 'video_recording';
+    public const TYPE_ATTENDANCE_SHEET = 'attendance_sheet';
     public const TYPE_MARK_ENTRY_FORMS = 'mark_entry_forms';
     public const TYPE_GRADED_SCRIPTS = 'graded_scripts';
     public const TYPE_QA = 'qa';
@@ -27,6 +28,7 @@ class Submission extends Model
 
     public const TYPES = [
         self::TYPE_VIDEO_RECORDING => 'Video Recording Submission',
+        self::TYPE_ATTENDANCE_SHEET => 'Attendance Sheet',
         self::TYPE_MARK_ENTRY_FORMS => 'Mark-entry Forms',
         self::TYPE_GRADED_SCRIPTS => 'Graded Scripts',
         self::TYPE_QA => 'Question Paper & Answer Sheet',
@@ -69,12 +71,17 @@ class Submission extends Model
 
     public function isPdfSubmission(): bool
     {
-        return in_array($this->submission_type, array_keys(self::CLAIM_CHECKLIST_MAP), true);
+        return $this->isAttendanceSheet() || in_array($this->submission_type, array_keys(self::CLAIM_CHECKLIST_MAP), true);
     }
 
     public function isVideoRecording(): bool
     {
         return $this->submission_type === self::TYPE_VIDEO_RECORDING;
+    }
+
+    public function isAttendanceSheet(): bool
+    {
+        return $this->submission_type === self::TYPE_ATTENDANCE_SHEET;
     }
 
     public function getVideoLinkAttribute(): ?string

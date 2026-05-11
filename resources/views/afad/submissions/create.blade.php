@@ -79,10 +79,10 @@
                         <div class="form-text">Paste a Google Drive link or any accessible video URL.</div>
                         @error('video_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="rate-field-wrap">
                         <label class="form-label fw-semibold" id="submission-rate-label">Rate (RM) <span class="text-danger">*</span></label>
                         <input type="number" name="rate_per_hour" id="submission-rate" class="form-control @error('rate_per_hour') is-invalid @enderror"
-                            value="{{ old('rate_per_hour') }}" min="0" step="0.01" required>
+                            value="{{ old('rate_per_hour') }}" min="0" step="0.01">
                         @error('rate_per_hour') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4 question-bank-only d-none">
@@ -169,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const submissionCourseName = document.getElementById('submission-course-name');
     const videoDurationSeconds = document.getElementById('video-duration-seconds');
     const submissionRate = document.getElementById('submission-rate');
+    const rateFieldWrap = document.getElementById('rate-field-wrap');
     const submissionRateLabel = document.getElementById('submission-rate-label');
     const submitBtn = document.getElementById('submission-submit');
     const fileRules = document.getElementById('file-rules');
@@ -196,21 +197,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateFileRules() {
         const isVideo = submissionType.value === 'video_recording';
+        const isAttendance = submissionType.value === 'attendance_sheet';
         const isQuestionBank = submissionType.value === 'question_bank_answer_sheet';
-        fileInput.accept = '.pdf';
+        fileInput.accept = isAttendance ? '.pdf,.xls,.xlsx,.csv' : '.pdf';
         fileInput.required = !isVideo;
         fileUploadSection.classList.toggle('d-none', isVideo);
-        fileRules.textContent = 'PDF only — max 5MB';
-        submissionHelp.innerHTML = '<i class="bi bi-info-circle me-1"></i>This document submission will auto-check the matching item in New Claim.';
+        fileRules.textContent = isAttendance ? 'PDF or Excel — max 5MB' : 'PDF only — max 5MB';
+        submissionHelp.innerHTML = isAttendance
+            ? '<i class="bi bi-info-circle me-1"></i>Attendance Sheet uploads do not need a rate.'
+            : '<i class="bi bi-info-circle me-1"></i>This document submission will auto-check the matching item in New Claim.';
         videoOnlyFields.forEach(field => field.classList.toggle('d-none', !isVideo));
         questionBankOnlyFields.forEach(field => field.classList.toggle('d-none', !isQuestionBank));
         videoOnlyFields.forEach(field => field.querySelectorAll('input, select, textarea').forEach(input => input.disabled = !isVideo));
         questionBankOnlyFields.forEach(field => field.querySelectorAll('input, select, textarea').forEach(input => input.disabled = !isQuestionBank));
         tutorialNumber.toggleAttribute('required', isVideo);
         videoUrl.toggleAttribute('required', isVideo);
+        rateFieldWrap.classList.toggle('d-none', isAttendance);
+        submissionRate.disabled = isAttendance;
+        submissionRate.toggleAttribute('required', !isAttendance);
         submissionRateLabel.innerHTML = isVideo
             ? 'Rate per Hour (RM) <span class="text-danger">*</span>'
             : 'Rate (RM) <span class="text-danger">*</span>';
+        if (isAttendance) {
+            submissionRate.value = '';
+        }
         semesterIntake.toggleAttribute('required', isQuestionBank);
         if (!isVideo) {
             tutorialNumber.value = '';

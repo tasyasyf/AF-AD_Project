@@ -57,7 +57,7 @@ class ClaimController extends Controller
     {
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
-            'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_type'     => ['required', 'in:teaching,module_development,consultation'],
             'total_hours'    => ['required', 'numeric', 'min:0'],
             'rate_per_hour'  => ['required', 'numeric', 'min:0'],
             'status'         => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],
@@ -97,7 +97,7 @@ class ClaimController extends Controller
     public function update(Request $request, Claim $claim): RedirectResponse
     {
         $data = $request->validate([
-            'claim_type'         => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_type'         => ['required', 'in:teaching,module_development,consultation'],
             'total_hours'        => ['required', 'numeric', 'min:0'],
             'rate_per_hour'      => ['required', 'numeric', 'min:0'],
             'status'             => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],

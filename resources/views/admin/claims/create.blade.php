@@ -31,7 +31,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Claim Type <span class="text-danger">*</span></label>
                         <select name="claim_type" class="form-select @error('claim_type') is-invalid @enderror" required>
-                            @foreach(['teaching','marking','module_development','consultation'] as $type)
+                            @foreach(['teaching','module_development','consultation'] as $type)
                                 <option value="{{ $type }}" {{ old('claim_type') === $type ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$type)) }}</option>
                             @endforeach
                         </select>

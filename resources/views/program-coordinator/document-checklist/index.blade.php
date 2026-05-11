@@ -56,7 +56,8 @@
                                 ->where('course', $appointment->course_code)
                                 ->whereNotNull('file_path');
 
-                            $hasAttendance = $appointment->claims
+                            $hasAttendance = $submissions->contains(fn ($submission) => $submission->submission_type === \App\Models\Submission::TYPE_ATTENDANCE_SHEET)
+                                || $appointment->claims
                                 ->flatMap(fn ($claim) => $claim->documents)
                                 ->contains(fn ($document) => $document->document_type === 'attendance_sheet' && $document->is_uploaded);
 

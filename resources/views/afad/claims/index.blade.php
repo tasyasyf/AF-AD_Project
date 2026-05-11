@@ -7,7 +7,7 @@
     </a>
 </div>
 
-<div class="card">
+<div class="card mb-4">
     <div class="card-body p-0">
         @if($claims->isEmpty())
             <div class="text-center text-muted py-5">

@@ -151,11 +151,6 @@
                         </tbody>
                     </table>
 
-                    <div class="fw-semibold text-decoration-underline mb-2">Bank Details</div>
-                    <div class="print-line-field"><span>Account Holder Name</span><span class="print-line">{{ $claim->profile->bank_account_holder }}</span></div>
-                    <div class="print-line-field"><span>Bank Account Number</span><span class="print-line">{{ $claim->profile->bank_account_number }}</span></div>
-                    <div class="print-line-field mb-3"><span>Bank Name</span><span class="print-line">{{ $claim->profile->bank_name }}</span></div>
-
                     @if($uploadedSubmissions->isNotEmpty())
                         <div class="fw-semibold mb-1">Uploaded Submissions</div>
                         <table class="print-claim-table mb-3">
@@ -188,33 +183,37 @@
                         </table>
                     @endif
 
-                    @if($claim->documents->isNotEmpty())
-                        <div class="fw-semibold mb-1">Supporting Documents</div>
-                        <table class="print-claim-table mb-3">
-                            <thead>
-                                <tr>
-                                    <th style="width:36px">No</th>
-                                    <th>Document</th>
-                                    <th style="width:95px">Required</th>
-                                    <th>Uploaded File</th>
-                                    <th style="width:95px">Uploaded At</th>
-                                    <th style="width:85px">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($claim->documents as $document)
-                                    <tr>
-                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td>{{ $document->label }}</td>
-                                        <td class="text-center">{{ $document->is_required ? 'Yes' : 'No' }}</td>
-                                        <td>{{ $document->file_original_name ?? '-' }}</td>
-                                        <td>{{ $document->uploaded_at?->format('d/m/Y') ?? '-' }}</td>
-                                        <td class="text-center">{{ $document->is_uploaded ? 'Uploaded' : '-' }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
+                    <div class="fw-semibold text-decoration-underline mb-2">Bank Details</div>
+                    <div class="print-line-field"><span>Account Holder Name</span><span class="print-line">{{ $claim->profile->bank_account_holder }}</span></div>
+                    <div class="print-line-field"><span>Bank Account Number</span><span class="print-line">{{ $claim->profile->bank_account_number }}</span></div>
+                    <div class="print-line-field mb-3"><span>Bank Name</span><span class="print-line">{{ $claim->profile->bank_name }}</span></div>
+
+                    <table class="print-claim-table signature-table mb-4">
+                        <tbody>
+                            <tr>
+                                <th>Claimed by</th>
+                                <th>Verified by Partner /<br>Programme Coordinator</th>
+                                <th>Endorsed by Dean</th>
+                                <th>AeU TMD Office Only</th>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>Assoc. Prof. Rosnah Amal Wan<br>Abd Razak</td>
+                                <td>Prof. Ts. Dr. Aedah Abd<br>Rahman</td>
+                                <td class="text-start align-top">
+                                    <div><strong>Claim Form No</strong> &nbsp; CFN</div>
+                                    <hr>
+                                    <div><strong>Received Date:</strong></div>
+                                </td>
+                            </tr>
+                            <tr class="signature-label">
+                                <td>Name & Signature</td>
+                                <td>Name, Signature and Company Stamp</td>
+                                <td>Name & Signature</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
 
                     <div class="small text-muted">Version 2.0, 22nd July 2020</div>
                 </div>
