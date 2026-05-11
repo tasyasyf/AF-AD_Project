@@ -62,7 +62,7 @@
                 <div class="auth-divider">New to the Portal?</div>
 
                 <a href="{{ route('register') }}" class="btn btn-outline-primary w-100 py-2 fw-semibold">
-                    Register as AF/AD
+                    Register
                 </a>
 
                 <p class="auth-terms text-center">

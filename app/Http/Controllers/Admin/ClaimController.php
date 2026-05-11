@@ -16,7 +16,7 @@ class ClaimController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Claim::with(['profile.user', 'appointment'])->latest('submitted_at');
+        $query = Claim::with(['profile.user', 'appointment', 'pcEndorser'])->latest('submitted_at');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -34,7 +34,7 @@ class ClaimController extends Controller
 
     public function show(Claim $claim): View
     {
-        $claim->load(['profile.user', 'appointment', 'documents', 'audits.performer', 'reviewer']);
+        $claim->load(['profile.user', 'appointment', 'documents', 'audits.performer', 'reviewer', 'pcEndorser']);
         return view('admin.claims.show', compact('claim'));
     }
 

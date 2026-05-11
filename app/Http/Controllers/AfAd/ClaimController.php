@@ -20,7 +20,8 @@ class ClaimController extends Controller
             return redirect()->route('afad.profile.create');
         }
         $claims = $profile->claims()->with('appointment')->latest()->paginate(10);
-        return view('afad.claims.index', compact('claims'));
+        $uploadedSubmissions = $this->uploadedSubmissions($profile);
+        return view('afad.claims.index', compact('claims', 'uploadedSubmissions'));
     }
 
     public function create(): View|RedirectResponse
@@ -33,10 +34,12 @@ class ClaimController extends Controller
         $appointments = $profile->appointments()->active()->get();
         $submissionChecklist = $this->submissionChecklistDefaults($profile);
         $submissionTotals = $this->submissionAmountDefaults($profile);
+        $uploadedSubmissions = $this->uploadedSubmissions($profile);
+        $videoRecordingRows = $this->videoRecordingClaimRows($profile);
         $hasRecordingSubmission = $profile->submissions()
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'hasRecordingSubmission'));
+        return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -46,20 +49,31 @@ class ClaimController extends Controller
 
         $data = $request->validate([
             'appointment_id' => ['required', 'exists:appointments,id'],
-            'claim_type'     => ['required', 'in:teaching,marking,module_development,consultation'],
-            'total_hours'    => ['required', 'numeric', 'min:0.5'],
-            'rate_per_hour'  => ['required', 'numeric', 'min:0'],
+            'claim_items' => ['required', 'array', 'min:1'],
+            'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
+            'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
             'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 
         $appointment = $profile->appointments()->findOrFail($data['appointment_id']);
+        if ($error = $this->teachingHoursError($data['claim_items'])) {
+            return back()->withErrors($error)->withInput();
+        }
+        $claimItems = $this->normalizeClaimItems($data['claim_items']);
+        $submissionTotals = $this->submissionAmountDefaults($profile);
+        $firstItem = $claimItems[0];
 
         $data['profile_id']   = $profile->id;
         $data['period_from']  = $appointment->start_date;
         $data['period_to']    = $appointment->end_date;
-        $data['total_amount'] = round($data['total_hours'] * $data['rate_per_hour'], 2);
+        $data['claim_type'] = $firstItem['claim_type'];
+        $data['claim_items'] = $claimItems;
+        $data['total_hours'] = round(collect($claimItems)->sum('total_hours'), 2);
+        $data['rate_per_hour'] = $firstItem['rate'];
+        $data['total_amount'] = round(collect($claimItems)->sum('amount') + ($submissionTotals['amount'] ?? 0), 2);
         $data = array_merge($data, $this->submissionChecklistData($profile));
 
         $claim = Claim::create($data);
@@ -76,8 +90,9 @@ class ClaimController extends Controller
     public function show(Claim $claim): View
     {
         abort_if($claim->profile->user_id !== auth()->id(), 403);
-        $claim->load(['appointment', 'documents', 'audits.performer']);
-        return view('afad.claims.show', compact('claim'));
+        $claim->load(['appointment', 'documents', 'audits.performer', 'pcEndorser']);
+        $uploadedSubmissions = $this->uploadedSubmissions($claim->profile);
+        return view('afad.claims.show', compact('claim', 'uploadedSubmissions'));
     }
 
     public function edit(Claim $claim): View|RedirectResponse
@@ -88,7 +103,10 @@ class ClaimController extends Controller
         $profile = auth()->user()->profile;
         $appointments = $profile->appointments()->active()->get();
         $submissionChecklist = $this->submissionChecklistDefaults($profile);
-        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist'));
+        $submissionTotals = $this->submissionAmountDefaults($profile);
+        $uploadedSubmissions = $this->uploadedSubmissions($profile);
+        $videoRecordingRows = $this->videoRecordingClaimRows($profile);
+        return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows'));
     }
 
     public function update(Request $request, Claim $claim): RedirectResponse
@@ -97,17 +115,29 @@ class ClaimController extends Controller
         abort_if(!in_array($claim->status, ['draft', 'returned']), 403);
 
         $data = $request->validate([
-            'claim_type'    => ['required', 'in:teaching,marking,module_development,consultation'],
-            'total_hours'   => ['required', 'numeric', 'min:0.5'],
-            'rate_per_hour' => ['required', 'numeric', 'min:0'],
+            'claim_items' => ['required', 'array', 'min:1'],
+            'claim_items.*.claim_type' => ['required', 'in:teaching,marking,module_development,consultation'],
+            'claim_items.*.total_hours' => ['nullable', 'numeric', 'min:0.5'],
+            'claim_items.*.rate' => ['required', 'numeric', 'min:0'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
             'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 
+        if ($error = $this->teachingHoursError($data['claim_items'])) {
+            return back()->withErrors($error)->withInput();
+        }
+        $claimItems = $this->normalizeClaimItems($data['claim_items']);
+        $submissionTotals = $this->submissionAmountDefaults($claim->profile);
+        $firstItem = $claimItems[0];
+
         $data['period_from'] = $claim->appointment->start_date;
         $data['period_to'] = $claim->appointment->end_date;
-        $data['total_amount'] = round($data['total_hours'] * $data['rate_per_hour'], 2);
+        $data['claim_type'] = $firstItem['claim_type'];
+        $data['claim_items'] = $claimItems;
+        $data['total_hours'] = round(collect($claimItems)->sum('total_hours'), 2);
+        $data['rate_per_hour'] = $firstItem['rate'];
+        $data['total_amount'] = round(collect($claimItems)->sum('amount') + ($submissionTotals['amount'] ?? 0), 2);
         $data = array_merge($data, $this->submissionChecklistData($claim->profile));
 
         $claim->update($data);
@@ -149,31 +179,70 @@ class ClaimController extends Controller
 
     private function createDocumentChecklist(Claim $claim): void
     {
-        $documents = match ($claim->claim_type) {
+        $documents = [];
+        foreach (collect($claim->displayClaimItems())->pluck('claim_type')->unique()->values() as $claimType) {
+            $documents = array_merge($documents, $this->documentsForClaimType($claimType));
+        }
+
+        foreach (collect($documents)->unique('document_type')->values() as $index => $doc) {
+            $doc['sort_order'] = $index + 1;
+            ClaimDocument::create(array_merge($doc, ['claim_id' => $claim->id]));
+        }
+    }
+
+    private function documentsForClaimType(string $claimType): array
+    {
+        return match ($claimType) {
             'teaching' => [
-                ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => true,  'sort_order' => 1],
-                ['document_type' => 'lesson_plan',      'label' => 'Lesson Plan',      'is_required' => true,  'sort_order' => 2],
-                ['document_type' => 'student_list',     'label' => 'Student List',      'is_required' => false, 'sort_order' => 3],
+                ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => true],
+                ['document_type' => 'lesson_plan', 'label' => 'Lesson Plan', 'is_required' => true],
+                ['document_type' => 'student_list', 'label' => 'Student List', 'is_required' => false],
             ],
             'marking' => [
-                ['document_type' => 'marking_scheme',     'label' => 'Marking Scheme',     'is_required' => true,  'sort_order' => 1],
-                ['document_type' => 'assignment_sample',  'label' => 'Assignment Sample',  'is_required' => true,  'sort_order' => 2],
-                ['document_type' => 'attendance_sheet',   'label' => 'Attendance Sheet',   'is_required' => false, 'sort_order' => 3],
+                ['document_type' => 'marking_scheme', 'label' => 'Marking Scheme', 'is_required' => true],
+                ['document_type' => 'assignment_sample', 'label' => 'Assignment Sample', 'is_required' => true],
+                ['document_type' => 'attendance_sheet', 'label' => 'Attendance Sheet', 'is_required' => false],
             ],
             'module_development' => [
-                ['document_type' => 'lesson_plan',        'label' => 'Module Draft / Outline', 'is_required' => true,  'sort_order' => 1],
-                ['document_type' => 'other',              'label' => 'Approval Letter',         'is_required' => true,  'sort_order' => 2],
+                ['document_type' => 'lesson_plan', 'label' => 'Module Draft / Outline', 'is_required' => true],
+                ['document_type' => 'other', 'label' => 'Approval Letter', 'is_required' => true],
             ],
             'consultation' => [
-                ['document_type' => 'attendance_sheet',   'label' => 'Consultation Record', 'is_required' => true,  'sort_order' => 1],
-                ['document_type' => 'other',              'label' => 'Supporting Document',  'is_required' => false, 'sort_order' => 2],
+                ['document_type' => 'attendance_sheet', 'label' => 'Consultation Record', 'is_required' => true],
+                ['document_type' => 'other', 'label' => 'Supporting Document', 'is_required' => false],
             ],
             default => [],
         };
+    }
 
-        foreach ($documents as $doc) {
-            ClaimDocument::create(array_merge($doc, ['claim_id' => $claim->id]));
+    private function normalizeClaimItems(array $items): array
+    {
+        return collect($items)
+            ->map(function (array $item) {
+                $type = $item['claim_type'];
+                $hours = $type === 'teaching' ? round((float) ($item['total_hours'] ?? 0), 2) : null;
+                $rate = round((float) $item['rate'], 2);
+
+                return [
+                    'claim_type' => $type,
+                    'total_hours' => $hours,
+                    'rate' => $rate,
+                    'amount' => $type === 'teaching' ? round($hours * $rate, 2) : $rate,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function teachingHoursError(array $items): ?array
+    {
+        foreach ($items as $index => $item) {
+            if (($item['claim_type'] ?? null) === 'teaching' && empty($item['total_hours'])) {
+                return ["claim_items.{$index}.total_hours" => 'Total hours is required for teaching claims.'];
+            }
         }
+
+        return null;
     }
 
     private function submissionChecklistData($profile): array
@@ -199,8 +268,7 @@ class ClaimController extends Controller
     private function submissionAmountDefaults($profile): array
     {
         $submissions = $profile->submissions()
-            ->whereNotNull('claim_hours')
-            ->whereNotNull('rate_per_hour')
+            ->whereNotNull('total_amount')
             ->get(['claim_hours', 'rate_per_hour', 'total_amount']);
 
         $hours = round((float) $submissions->sum('claim_hours'), 2);
@@ -208,5 +276,65 @@ class ClaimController extends Controller
         $rate = $hours > 0 ? round($amount / $hours, 2) : 0;
 
         return compact('hours', 'rate', 'amount');
+    }
+
+    private function uploadedSubmissions($profile)
+    {
+        return $profile->submissions()
+            ->latest()
+            ->get([
+                'id',
+                'submission_type',
+                'title',
+                'course',
+                'course_name',
+                'tutorial_number',
+                'submission_date',
+                'claim_hours',
+                'rate_per_hour',
+                'total_amount',
+                'status',
+            ]);
+    }
+
+    private function videoRecordingClaimRows($profile): array
+    {
+        return $profile->submissions()
+            ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
+            ->whereNotNull('rate_per_hour')
+            ->orderBy('course')
+            ->orderBy('tutorial_number')
+            ->orderBy('submission_date')
+            ->get()
+            ->groupBy(fn(Submission $submission) => implode('|', [
+                $submission->course ?? '',
+                $submission->course_name ?? '',
+                $submission->rate_per_hour ?? '',
+            ]))
+            ->map(function ($submissions) {
+                $first = $submissions->first();
+                $tutorials = [];
+
+                foreach ($submissions->take(4) as $submission) {
+                    $tutorials[] = [
+                        'date' => ($submission->submission_date ?? $submission->created_at)->format('d/m/Y'),
+                        'hours' => $submission->claim_hours ? number_format((float) $submission->claim_hours, 2) : '',
+                    ];
+                }
+
+                $totalHours = round((float) $submissions->sum('claim_hours'), 2);
+                $amount = round((float) $submissions->sum('total_amount'), 2);
+
+                return [
+                    'course' => $first->course,
+                    'course_name' => $first->course_name,
+                    'tutorials' => $tutorials,
+                    'total_hours' => $totalHours,
+                    'rate' => (float) $first->rate_per_hour,
+                    'amount' => $amount,
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

@@ -1,13 +1,46 @@
 <x-layouts.app title="Admin Dashboard">
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h5 class="fw-bold mb-0">System Overview</h5>
+<style>
+    .admin-metric-card .card-body {
+        min-height: 78px;
+        padding: 0.85rem 1rem;
+    }
+
+    .admin-metric-card .rounded-circle {
+        width: 40px !important;
+        height: 40px !important;
+        flex: 0 0 40px;
+    }
+
+    .admin-metric-card .rounded-circle i {
+        font-size: 1rem !important;
+    }
+
+    .admin-metric-card .text-muted.small {
+        margin-bottom: 0.15rem;
+        font-size: 0.74rem;
+    }
+
+    .admin-metric-card .fw-bold.fs-4 {
+        font-size: 1.35rem !important;
+    }
+
+    .admin-panel-item {
+        min-height: 76px;
+        border: 1px solid #f2d5d1;
+        border-radius: 6px;
+        padding: 0.8rem 0.9rem;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h5 class="fw-bold mb-1">System Overview</h5>
+        <div class="text-muted small">Monitor portal activity and manage core admin records.</div>
+    </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ route('admin.profiles.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-person-plus me-1"></i> New Profile
-        </a>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-person-gear me-1"></i> New User
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i> New User
         </a>
         <a href="{{ route('admin.appointments.create') }}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-calendar-plus me-1"></i> New Appointment
@@ -15,125 +48,107 @@
         <a href="{{ route('admin.claims.create') }}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-file-earmark-plus me-1"></i> New Claim
         </a>
-        <a href="{{ route('admin.submissions.create') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-inbox me-1"></i> New Submission
-        </a>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-3">
     @foreach([
-        ['label'=>'Total AF/AD Users', 'value'=>$stats['total_afad'], 'icon'=>'people', 'color'=>'primary', 'href'=>route('admin.profiles.index')],
-        ['label'=>'School Executives', 'value'=>$stats['total_executives'], 'icon'=>'person-workspace', 'color'=>'info', 'href'=>route('admin.users.index', ['role'=>'executive'])],
-        ['label'=>'Admin Users', 'value'=>$stats['total_admins'], 'icon'=>'person-gear', 'color'=>'secondary', 'href'=>route('admin.users.index', ['role'=>'admin'])],
-        ['label'=>'Registered Profiles', 'value'=>$stats['total_profiles'], 'icon'=>'person-badge', 'color'=>'info', 'href'=>route('admin.profiles.index')],
-        ['label'=>'Verified Profiles', 'value'=>$stats['verified_profiles'], 'icon'=>'check-circle-fill', 'color'=>'success', 'href'=>route('admin.profiles.index', ['status'=>'verified'])],
-        ['label'=>'Pending Verification', 'value'=>$stats['pending_profiles'], 'icon'=>'hourglass-split', 'color'=>'warning', 'href'=>route('admin.profiles.index', ['status'=>'pending'])],
-        ['label'=>'Total Appointments', 'value'=>$stats['total_appointments'], 'icon'=>'calendar3', 'color'=>'primary', 'href'=>route('admin.appointments.index')],
-        ['label'=>'Total Claims', 'value'=>$stats['total_claims'], 'icon'=>'file-earmark-text', 'color'=>'secondary', 'href'=>route('admin.claims.index')],
-        ['label'=>'Approved Claims', 'value'=>$stats['claims_approved'], 'icon'=>'check2-all', 'color'=>'success', 'href'=>route('admin.claims.index', ['status'=>'approved'])],
-        ['label'=>'Claims Pending Review', 'value'=>$stats['claims_pending'], 'icon'=>'clock-history', 'color'=>'warning', 'href'=>route('admin.claims.index', ['status'=>'submitted'])],
+        ['label'=>'AF/AD Users', 'value'=>$stats['total_afad'], 'icon'=>'people', 'href'=>route('admin.profiles.index')],
+        ['label'=>'School Executives', 'value'=>$stats['total_executives'], 'icon'=>'person-workspace', 'href'=>route('admin.users.index', ['role'=>'executive'])],
+        ['label'=>'Program Coordinators', 'value'=>$stats['total_pc'], 'icon'=>'person-check', 'href'=>route('admin.users.index', ['role'=>'pc'])],
+        ['label'=>'Admin Users', 'value'=>$stats['total_admins'], 'icon'=>'person-gear', 'href'=>route('admin.users.index', ['role'=>'admin'])],
     ] as $s)
-    <div class="col-sm-6 col-xl-3">
-        <a href="{{ $s['href'] }}" class="stat-card-link">
-            <div class="card stat-card h-100" style="border-color:var(--bs-{{ $s['color'] }})">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-{{ $s['color'] }} bg-opacity-10"
-                        style="width:48px;height:48px;flex-shrink:0">
-                        <i class="bi bi-{{ $s['icon'] }} fs-5 text-{{ $s['color'] }}"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">{{ $s['label'] }}</div>
-                        <div class="fw-bold fs-4">{{ $s['value'] }}</div>
+        <div class="col-sm-6 col-xl-3">
+            <a href="{{ $s['href'] }}" class="stat-card-link">
+                <div class="card stat-card admin-metric-card h-100">
+                    <div class="card-body d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-{{ $s['icon'] }}"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small">{{ $s['label'] }}</div>
+                            <div class="fw-bold fs-4">{{ $s['value'] }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </a>
-    </div>
+            </a>
+        </div>
     @endforeach
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <a href="{{ route('admin.profiles.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-person-plus text-primary me-2"></i>Create AF/AD Profile</div>
-                    <div class="text-muted small">Input a new AF/AD account and profile from the admin portal.</div>
+<div class="row g-3 mb-3">
+    <div class="col-xl-5">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Profiles</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    @foreach([
+                        ['label'=>'Registered', 'value'=>$stats['total_profiles'], 'icon'=>'person-badge', 'href'=>route('admin.profiles.index')],
+                        ['label'=>'Verified', 'value'=>$stats['verified_profiles'], 'icon'=>'check-circle-fill', 'href'=>route('admin.profiles.index', ['status'=>'verified'])],
+                        ['label'=>'Pending', 'value'=>$stats['pending_profiles'], 'icon'=>'hourglass-split', 'href'=>route('admin.profiles.index', ['status'=>'pending'])],
+                    ] as $s)
+                        <div class="col-md-4">
+                            <a href="{{ $s['href'] }}" class="stat-card-link">
+                                <div class="admin-panel-item h-100">
+                                    <div class="text-primary mb-1"><i class="bi bi-{{ $s['icon'] }}"></i></div>
+                                    <div class="text-muted small">{{ $s['label'] }}</div>
+                                    <div class="fw-bold fs-5">{{ $s['value'] }}</div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </a>
+        </div>
     </div>
-    <div class="col-md-4">
-        <a href="{{ route('admin.appointments.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-calendar-plus text-primary me-2"></i>Create Appointment</div>
-                    <div class="text-muted small">Assign AF/AD course appointments without switching role.</div>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('admin.users.create', ['role' => 'executive']) }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-person-workspace text-primary me-2"></i>Create School Executive</div>
-                    <div class="text-muted small">Add a School Executive login account from the admin portal.</div>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('admin.claims.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-file-earmark-plus text-primary me-2"></i>Create Claim</div>
-                    <div class="text-muted small">Input a claim record on behalf of AF/AD submissions.</div>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <a href="{{ route('admin.classes.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-journal-plus text-primary me-2"></i>Create Class</div>
-                    <div class="text-muted small">Input class schedules on behalf of AF/AD users.</div>
+    <div class="col-xl-7">
+        <div class="card h-100">
+            <div class="card-header bg-white fw-semibold">Operations</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    @foreach([
+                        ['label'=>'Appointments', 'value'=>$stats['total_appointments'], 'icon'=>'calendar3', 'href'=>route('admin.appointments.index')],
+                        ['label'=>'Total Claims', 'value'=>$stats['total_claims'], 'icon'=>'file-earmark-text', 'href'=>route('admin.claims.index')],
+                        ['label'=>'Pending Claims', 'value'=>$stats['claims_pending'], 'icon'=>'clock-history', 'href'=>route('admin.claims.index', ['status'=>'submitted'])],
+                        ['label'=>'Approved Claims', 'value'=>$stats['claims_approved'], 'icon'=>'check2-all', 'href'=>route('admin.claims.index', ['status'=>'approved'])],
+                        ['label'=>'Pending PC Endorsement', 'value'=>$stats['claims_pending_pc'], 'icon'=>'clipboard-check', 'href'=>route('admin.claims.index', ['status'=>'approved'])],
+                        ['label'=>'PC Endorsed', 'value'=>$stats['claims_pc_endorsed'], 'icon'=>'patch-check', 'href'=>route('admin.claims.index', ['status'=>'approved'])],
+                    ] as $s)
+                        <div class="col-md-6">
+                            <a href="{{ $s['href'] }}" class="stat-card-link">
+                                <div class="admin-panel-item d-flex align-items-center justify-content-between gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-{{ $s['icon'] }} text-primary"></i>
+                                        <span class="fw-semibold small">{{ $s['label'] }}</span>
+                                    </div>
+                                    <span class="fw-bold fs-5 text-nowrap">{{ $s['value'] }}</span>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('admin.certificates.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-award text-primary me-2"></i>Create Certificate</div>
-                    <div class="text-muted small">Add and verify certificates for any AF/AD profile.</div>
-                </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{{ route('admin.submissions.create') }}" class="stat-card-link">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="fw-semibold mb-1"><i class="bi bi-inbox text-primary me-2"></i>Create Submission</div>
-                    <div class="text-muted small">Upload submission records and review states from admin.</div>
-                </div>
-            </div>
-        </a>
+        </div>
     </div>
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <div class="text-muted small text-center">
-            <i class="bi bi-currency-exchange fs-4 text-success d-block mb-1"></i>
-            Total Approved Claim Amount: <strong class="text-success fs-5">RM {{ number_format($stats['total_claim_amount'], 2) }}</strong>
+    <div class="card-body py-3 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:42px;height:42px;flex:0 0 42px">
+                <i class="bi bi-currency-exchange text-success"></i>
+            </div>
+            <div>
+                <div class="fw-semibold">Approved Claim Amount</div>
+                <div class="text-muted small">Total approved for payment</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="fw-bold fs-4 text-success">RM {{ number_format($stats['total_claim_amount'], 2) }}</div>
+            <a href="{{ route('admin.claims.index', ['status'=>'approved']) }}" class="btn btn-sm btn-outline-primary">
+                View Approved Claims
+            </a>
         </div>
     </div>
 </div>

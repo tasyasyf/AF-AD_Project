@@ -16,6 +16,8 @@
                 <option value="">All Roles</option>
                 <option value="af" {{ request('role_type') === 'af' ? 'selected' : '' }}>AF</option>
                 <option value="ad" {{ request('role_type') === 'ad' ? 'selected' : '' }}>AD</option>
+                <option value="af_internal" {{ request('role_type') === 'af_internal' ? 'selected' : '' }}>AF Internal</option>
+                <option value="ad_internal" {{ request('role_type') === 'ad_internal' ? 'selected' : '' }}>AD Internal</option>
             </select>
             <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i> Filter</button>
             <a href="{{ route('admin.appointments.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
@@ -41,11 +43,20 @@
                 </thead>
                 <tbody>
                     @forelse($appointments as $appt)
+                    @php
+                        $roleLabels = [
+                            'af' => 'AF',
+                            'ad' => 'AD',
+                            'af_internal' => 'AF Internal',
+                            'ad_internal' => 'AD Internal',
+                        ];
+                        $roleClass = str_contains($appt->role_type, 'af') ? 'bg-primary' : 'bg-info';
+                    @endphp
                     <tr>
                         <td class="small fw-semibold">{{ $appt->profile->full_name }}</td>
                         <td class="fw-semibold">{{ $appt->course_code }}</td>
                         <td class="small">{{ $appt->course_name }}</td>
-                        <td><span class="badge {{ $appt->role_type === 'af' ? 'bg-primary' : 'bg-info' }}">{{ strtoupper($appt->role_type) }}</span></td>
+                        <td><span class="badge {{ $roleClass }}">{{ $roleLabels[$appt->role_type] ?? strtoupper($appt->role_type) }}</span></td>
                         <td class="small">{{ $appt->semester }}</td>
                         <td class="small text-muted">{{ $appt->start_date->format('d M Y') }}</td>
                         <td>

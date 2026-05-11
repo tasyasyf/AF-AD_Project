@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -56,6 +56,11 @@ class User extends Authenticatable
     public function isExecutive(): bool
     {
         return $this->role === 'executive';
+    }
+
+    public function isProgramCoordinator(): bool
+    {
+        return $this->role === 'pc';
     }
 
     public function isAdmin(): bool

@@ -30,9 +30,11 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
                         <select name="role" class="form-select @error('role') is-invalid @enderror" required>
-                            @php($selectedRole = old('role', $user?->role ?? request('role', 'afad')))
+                            @php($selectedRole = old('role', $user?->role ?? request('role')))
+                            <option value="">Select role...</option>
                             <option value="afad" {{ $selectedRole === 'afad' ? 'selected' : '' }}>AF/AD</option>
                             <option value="executive" {{ $selectedRole === 'executive' ? 'selected' : '' }}>School Executive</option>
+                            <option value="pc" {{ $selectedRole === 'pc' ? 'selected' : '' }}>Program Coordinator</option>
                             <option value="admin" {{ $selectedRole === 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>
                         @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -61,6 +63,12 @@
                         <div class="col-12">
                             <div class="alert alert-info small mb-0">
                                 This account controls access to the School Executive portal.
+                            </div>
+                        </div>
+                    @elseif($isEdit && $user?->role === 'pc')
+                        <div class="col-12">
+                            <div class="alert alert-info small mb-0">
+                                This account controls access to the Program Coordinator portal.
                             </div>
                         </div>
                     @endif

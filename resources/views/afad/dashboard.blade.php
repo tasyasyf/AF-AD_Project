@@ -32,7 +32,7 @@
         </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('afad.claims.index') }}" class="stat-card-link">
+        <a href="{{ $profile?->status === 'verified' ? route('afad.claims.index') : route('afad.profile.show') }}" class="stat-card-link">
             <div class="card stat-card h-100" style="border-color:#ffc107">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10" style="width:52px;height:52px">
@@ -47,7 +47,7 @@
         </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <a href="{{ route('afad.claims.index') }}" class="stat-card-link">
+        <a href="{{ $profile?->status === 'verified' ? route('afad.claims.index') : route('afad.profile.show') }}" class="stat-card-link">
             <div class="card stat-card h-100" style="border-color:#198754">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10" style="width:52px;height:52px">
@@ -82,14 +82,14 @@
 @elseif($profile->status === 'pending')
     <div class="alert alert-info d-flex align-items-center gap-2">
         <i class="bi bi-hourglass-split fs-5"></i>
-        <div>Your profile is <strong>pending verification</strong> by the School Executive.</div>
+        <div>Your profile is <strong>pending verification</strong> by the School Executive. You can submit claim forms after the profile is verified.</div>
     </div>
 @endif
 
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Recent Claims</span>
-        <a href="{{ route('afad.claims.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        <a href="{{ $profile?->status === 'verified' ? route('afad.claims.index') : route('afad.profile.show') }}" class="btn btn-sm btn-outline-primary">View All</a>
     </div>
     <div class="card-body p-0">
         @if($recent_claims->isEmpty())

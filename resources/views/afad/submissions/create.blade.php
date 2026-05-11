@@ -72,28 +72,18 @@
                         @error('tutorial_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-12 video-only d-none">
-                        <label class="form-label fw-semibold">Hour / Duration</label>
-                        <input type="text" id="video-duration-display" class="form-control" value="{{ old('video_duration_seconds') ? number_format(((float) old('video_duration_seconds')) / 60, 2) . ' minutes' : '' }}"
-                            placeholder="Duration will be calculated automatically after choosing a video" readonly>
-                        <input type="hidden" name="video_duration_seconds" id="video-duration-seconds" value="{{ old('video_duration_seconds') }}">
-                        @error('video_duration_seconds') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+                        <label class="form-label fw-semibold">Video Recording Link <span class="text-danger">*</span></label>
+                        <input type="url" name="video_url" id="video-url" class="form-control @error('video_url') is-invalid @enderror"
+                            value="{{ old('video_url') }}" placeholder="https://drive.google.com/...">
+                        <input type="hidden" name="video_duration_seconds" id="video-duration-seconds" value="{{ old('video_duration_seconds', 0) }}">
+                        <div class="form-text">Paste a Google Drive link or any accessible video URL.</div>
+                        @error('video_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-4 video-only d-none">
-                        <label class="form-label fw-semibold">Claim Hours <span class="text-danger">*</span></label>
-                        <input type="number" name="claim_hours" id="claim-hours" class="form-control @error('claim_hours') is-invalid @enderror"
-                            value="{{ old('claim_hours') }}" min="0.01" step="0.01" readonly>
-                        <div class="form-text" id="claim-hours-help">Calculated from the selected video duration.</div>
-                        @error('claim_hours') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-4 video-only d-none">
-                        <label class="form-label fw-semibold">Rate per Hour (RM) <span class="text-danger">*</span></label>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" id="submission-rate-label">Rate (RM) <span class="text-danger">*</span></label>
                         <input type="number" name="rate_per_hour" id="submission-rate" class="form-control @error('rate_per_hour') is-invalid @enderror"
-                            value="{{ old('rate_per_hour') }}" min="0" step="0.01">
+                            value="{{ old('rate_per_hour') }}" min="0" step="0.01" required>
                         @error('rate_per_hour') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-4 video-only d-none">
-                        <label class="form-label fw-semibold">Total Amount</label>
-                        <input type="text" id="submission-total-display" class="form-control" value="RM 0.00" readonly>
                     </div>
                     <div class="col-md-4 question-bank-only d-none">
                         <label class="form-label fw-semibold">Semester Intake <span class="text-danger">*</span></label>
@@ -117,7 +107,7 @@
                             rows="3" placeholder="Optional notes about this submission...">{{ old('description') }}</textarea>
                         @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-12">
+                    <div class="col-12" id="file-upload-section">
                         <label class="form-label fw-semibold">File Upload <span class="text-danger">*</span></label>
                         <input type="file" name="file" id="submission-file" class="d-none" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,video/x-msvideo,video/x-ms-wmv">
                         <div id="file-preview" class="d-none border rounded p-3 mb-2 bg-light d-flex align-items-center gap-3">
@@ -133,11 +123,11 @@
                         <button type="button" class="btn btn-outline-primary" id="file-upload-btn">
                             <i class="bi bi-upload me-1"></i> Choose File
                         </button>
-                        <span class="text-muted small ms-2" id="file-rules">Video file — max 500MB</span>
+                        <span class="text-muted small ms-2" id="file-rules">PDF only — max 5MB</span>
                         @error('file') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
                         <div class="form-text mt-2" id="submission-help">
                             <i class="bi bi-info-circle me-1"></i>
-                            Upload the actual video recording. The duration will be calculated automatically.
+                            This document submission will auto-check the matching item in New Claim.
                         </div>
                     </div>
                 </div>
@@ -169,18 +159,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const fileSize = document.getElementById('file-size');
     const removeBtn = document.getElementById('file-remove-btn');
     const submissionType = document.getElementById('submission-type');
+    const fileUploadSection = document.getElementById('file-upload-section');
     const videoOnlyFields = document.querySelectorAll('.video-only');
     const questionBankOnlyFields = document.querySelectorAll('.question-bank-only');
     const tutorialNumber = document.getElementById('tutorial-number');
+    const videoUrl = document.getElementById('video-url');
     const semesterIntake = document.getElementById('semester-intake');
     const submissionCourseCode = document.getElementById('submission-course-code');
     const submissionCourseName = document.getElementById('submission-course-name');
-    const videoDurationDisplay = document.getElementById('video-duration-display');
     const videoDurationSeconds = document.getElementById('video-duration-seconds');
-    const claimHours = document.getElementById('claim-hours');
-    const claimHoursHelp = document.getElementById('claim-hours-help');
     const submissionRate = document.getElementById('submission-rate');
-    const submissionTotalDisplay = document.getElementById('submission-total-display');
+    const submissionRateLabel = document.getElementById('submission-rate-label');
     const submitBtn = document.getElementById('submission-submit');
     const fileRules = document.getElementById('file-rules');
     const submissionHelp = document.getElementById('submission-help');
@@ -192,18 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const nameToCode = Object.fromEntries(Object.entries(codeToName).map(([code, name]) => [name, code]));
 
     function resetDuration() {
-        videoDurationDisplay.value = '';
-        videoDurationSeconds.value = '';
-        if (submissionType.value === 'video_recording') {
-            claimHours.value = '';
-        }
-        updateSubmissionTotal();
-    }
-
-    function updateSubmissionTotal() {
-        const hours = parseFloat(claimHours.value) || 0;
-        const rate = parseFloat(submissionRate.value) || 0;
-        submissionTotalDisplay.value = 'RM ' + (hours * rate).toFixed(2);
+        videoDurationSeconds.value = '0';
     }
 
     function iconForFile(file) {
@@ -219,22 +197,24 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateFileRules() {
         const isVideo = submissionType.value === 'video_recording';
         const isQuestionBank = submissionType.value === 'question_bank_answer_sheet';
-        fileInput.accept = isVideo ? 'video/mp4,video/quicktime,video/webm,video/x-matroska,video/x-msvideo,video/x-ms-wmv' : '.pdf';
-        fileRules.textContent = isVideo ? 'Video file — max 500MB' : 'PDF only — max 5MB';
-        submissionHelp.innerHTML = isVideo
-            ? '<i class="bi bi-info-circle me-1"></i>Upload the actual video recording. The duration will be calculated automatically.'
-            : '<i class="bi bi-info-circle me-1"></i>This document submission will auto-check the matching item in New Claim.';
+        fileInput.accept = '.pdf';
+        fileInput.required = !isVideo;
+        fileUploadSection.classList.toggle('d-none', isVideo);
+        fileRules.textContent = 'PDF only — max 5MB';
+        submissionHelp.innerHTML = '<i class="bi bi-info-circle me-1"></i>This document submission will auto-check the matching item in New Claim.';
         videoOnlyFields.forEach(field => field.classList.toggle('d-none', !isVideo));
         questionBankOnlyFields.forEach(field => field.classList.toggle('d-none', !isQuestionBank));
         videoOnlyFields.forEach(field => field.querySelectorAll('input, select, textarea').forEach(input => input.disabled = !isVideo));
         questionBankOnlyFields.forEach(field => field.querySelectorAll('input, select, textarea').forEach(input => input.disabled = !isQuestionBank));
-        claimHours.readOnly = true;
         tutorialNumber.toggleAttribute('required', isVideo);
-        claimHours.toggleAttribute('required', isVideo);
-        submissionRate.toggleAttribute('required', isVideo);
+        videoUrl.toggleAttribute('required', isVideo);
+        submissionRateLabel.innerHTML = isVideo
+            ? 'Rate per Hour (RM) <span class="text-danger">*</span>'
+            : 'Rate (RM) <span class="text-danger">*</span>';
         semesterIntake.toggleAttribute('required', isQuestionBank);
         if (!isVideo) {
             tutorialNumber.value = '';
+            videoUrl.value = '';
             resetDuration();
             submitBtn.disabled = false;
         }
@@ -262,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
     fileInput.addEventListener('change', function () {
         if (this.files.length) {
             const file = this.files[0];
-            const isVideo = submissionType.value === 'video_recording';
             fileName.textContent = file.name;
             fileSize.textContent = file.size >= 1024 * 1024
                 ? (file.size / 1024 / 1024).toFixed(2) + ' MB'
@@ -273,30 +252,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             resetDuration();
             submitBtn.disabled = false;
-            if (isVideo) {
-                submitBtn.disabled = true;
-                videoDurationDisplay.value = 'Calculating...';
-                const video = document.createElement('video');
-                video.preload = 'metadata';
-                video.onloadedmetadata = function () {
-                    URL.revokeObjectURL(video.src);
-                    const seconds = Math.round(video.duration);
-                    const minutes = (video.duration / 60).toFixed(2);
-                    const hours = (video.duration / 3600).toFixed(2);
-                    videoDurationSeconds.value = seconds;
-                    videoDurationDisplay.value = minutes + ' minutes';
-                    claimHours.value = hours;
-                    updateSubmissionTotal();
-                    submitBtn.disabled = false;
-                };
-                video.onerror = function () {
-                    URL.revokeObjectURL(video.src);
-                    resetDuration();
-                    videoDurationDisplay.value = 'Unable to calculate duration. Please choose a valid video file.';
-                    submitBtn.disabled = true;
-                };
-                video.src = URL.createObjectURL(file);
-            }
         }
     });
 
@@ -308,10 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled = false;
     });
 
-    claimHours.addEventListener('input', updateSubmissionTotal);
-    submissionRate.addEventListener('input', updateSubmissionTotal);
     updateFileRules();
-    updateSubmissionTotal();
 });
 </script>
 </x-layouts.app>

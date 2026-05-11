@@ -59,6 +59,7 @@ class ExecutiveController extends Controller
             'verified_by' => $request->user()->id,
             'verified_at' => now(),
             'rejection_reason' => null,
+            'rejection_sections' => null,
         ]);
 
         $profile->certificates()->update([
@@ -89,8 +90,15 @@ class ExecutiveController extends Controller
         $profile->update([
             'status'           => 'rejected',
             'rejection_reason' => $request->rejection_reason,
+            'rejection_sections' => $request->input('rejection_sections'),
             'verified_by'      => $request->user()->id,
             'verified_at'      => now(),
+        ]);
+
+        $profile->certificates()->update([
+            'is_verified' => false,
+            'verified_by' => null,
+            'verified_at' => null,
         ]);
 
         return response()->json(['message' => "Profile for {$profile->full_name} rejected."]);

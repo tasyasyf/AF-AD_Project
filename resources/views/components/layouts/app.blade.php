@@ -213,10 +213,11 @@
             <div class="brand-lockup">
                 <img src="{{ asset('images/aeu-logo.svg') }}" alt="AEU" class="brand-logo">
                 <div>
-                    <h5>Academic Portal</h5>
+                    <h5>{{ auth()->user()->name }}</h5>
                     <small>
-                        @if(auth()->user()->isAfAd()) Academic Staff
+                        @if(auth()->user()->isAfAd()) AF/AD
                         @elseif(auth()->user()->isExecutive()) School Executive
+                        @elseif(auth()->user()->isProgramCoordinator()) Program Coordinator
                         @else Administrator
                         @endif
                     </small>
@@ -228,6 +229,8 @@
             @include('layouts.partials.nav-afad')
         @elseif(auth()->user()->isExecutive())
             @include('layouts.partials.nav-executive')
+        @elseif(auth()->user()->isProgramCoordinator())
+            @include('layouts.partials.nav-pc')
         @else
             @include('layouts.partials.nav-admin')
         @endif

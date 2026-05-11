@@ -16,6 +16,7 @@
                 <option value="">All Roles</option>
                 <option value="afad" {{ request('role') === 'afad' ? 'selected' : '' }}>AF/AD</option>
                 <option value="executive" {{ request('role') === 'executive' ? 'selected' : '' }}>School Executive</option>
+                <option value="pc" {{ request('role') === 'pc' ? 'selected' : '' }}>Program Coordinator</option>
                 <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
             </select>
             <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i> Filter</button>
@@ -45,7 +46,13 @@
                         <td class="small">{{ $user->email }}</td>
                         <td>
                             <span class="badge bg-light text-dark border">
-                                {{ $user->role === 'executive' ? 'School Executive' : strtoupper($user->role) }}
+                                @if($user->role === 'executive')
+                                    School Executive
+                                @elseif($user->role === 'pc')
+                                    Program Coordinator
+                                @else
+                                    {{ strtoupper($user->role) }}
+                                @endif
                             </span>
                         </td>
                         <td>

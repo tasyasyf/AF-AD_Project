@@ -90,7 +90,9 @@ class SubmissionController extends Controller
 
         if ($request->hasFile('file')) {
             $this->validateUpload($request, $isVideo);
-            Storage::disk('local')->delete($submission->file_path);
+            if (!$submission->hasVideoLink()) {
+                Storage::disk('local')->delete($submission->file_path);
+            }
             $file = $request->file('file');
             $data['file_path'] = $file->store('submissions', 'local');
             $data['file_original_name'] = $file->getClientOriginalName();
@@ -116,13 +118,16 @@ class SubmissionController extends Controller
 
     public function download(Submission $submission): StreamedResponse
     {
+        abort_if($submission->hasVideoLink(), 404);
         abort_if(!Storage::disk('local')->exists($submission->file_path), 404);
         return Storage::disk('local')->download($submission->file_path, $submission->file_original_name);
     }
 
     public function destroy(Submission $submission): RedirectResponse
     {
-        Storage::disk('local')->delete($submission->file_path);
+        if (!$submission->hasVideoLink()) {
+            Storage::disk('local')->delete($submission->file_path);
+        }
         $submission->delete();
 
         return redirect()->route('admin.submissions.index')
@@ -138,7 +143,7 @@ class SubmissionController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'tutorial_number' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'integer', 'between:1,5'],
-            'video_duration_seconds' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'numeric', 'min:1', 'max:86400'],
+            'video_duration_seconds' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'numeric', 'min:0', 'max:86400'],
             'semester_intake' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_QUESTION_BANK_ANSWER_SHEET, 'string', 'in:January,May,September'],
             'course' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_QUESTION_BANK_ANSWER_SHEET, 'required_if:submission_type,' . Submission::TYPE_MARK_ENTRY_FORMS, 'string', 'in:CRM300,CSC400,CIT400'],
             'course_name' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_MARK_ENTRY_FORMS, 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],

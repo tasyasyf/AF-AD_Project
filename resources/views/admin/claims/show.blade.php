@@ -33,15 +33,19 @@
                             <dd><a href="{{ route('admin.profiles.show', $claim->profile) }}">{{ $claim->profile->full_name }}</a></dd>
                             <dt class="text-muted small">Course</dt>
                             <dd>{{ $claim->appointment->course_code }} – {{ $claim->appointment->course_name }}</dd>
-                            <dt class="text-muted small">Claim Type</dt>
-                            <dd>{{ ucfirst(str_replace('_', ' ', $claim->claim_type)) }}</dd>
+                            <dt class="text-muted small">Claim Types</dt>
+                            <dd>
+                                @foreach($claim->displayClaimItems() as $item)
+                                    <div>{{ ucfirst(str_replace('_', ' ', $item['claim_type'])) }} - RM {{ number_format((float) ($item['amount'] ?? 0), 2) }}</div>
+                                @endforeach
+                            </dd>
                         </dl>
                     </div>
                     <div class="col-md-6">
                         <dl class="mb-0">
                             <dt class="text-muted small">Total Hours</dt>
                             <dd>{{ $claim->total_hours }} hours</dd>
-                            <dt class="text-muted small">Rate / Hour</dt>
+                            <dt class="text-muted small">Summary Rate</dt>
                             <dd>RM {{ number_format($claim->rate_per_hour, 2) }}</dd>
                             <dt class="text-muted small">Total Amount</dt>
                             <dd class="fw-bold text-primary fs-5">RM {{ number_format($claim->total_amount, 2) }}</dd>
@@ -57,6 +61,23 @@
                     <dt class="text-muted small">Reviewed By</dt>
                     <dd>{{ $claim->reviewer?->name }}, {{ $claim->reviewed_at?->format('d M Y H:i') }}</dd>
                 @endif
+                <hr>
+                <dt class="text-muted small">PC Endorsement</dt>
+                <dd>
+                    @if($claim->pc_endorsed_at)
+                        <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Endorsed</span>
+                        <div class="small mt-1">
+                            {{ $claim->pcEndorser?->name }} on {{ $claim->pc_endorsed_at->format('d M Y H:i') }}
+                        </div>
+                        @if($claim->pc_remarks)
+                            <div class="text-muted small fst-italic">{{ $claim->pc_remarks }}</div>
+                        @endif
+                    @elseif($claim->status === 'approved')
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending PC Endorsement</span>
+                    @else
+                        <span class="text-muted small">Not applicable</span>
+                    @endif
+                </dd>
                 <hr>
                 <div class="text-muted small fw-semibold mb-2">Submission Checklist</div>
                 <div class="row g-2">
@@ -100,7 +121,13 @@
                             <span class="fw-semibold">{{ $audit->created_at->format('H:i') }}</span>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="fw-semibold small">{{ ucfirst(str_replace('_', ' ', $audit->action)) }}</div>
+                            <div class="fw-semibold small">
+                                @if($audit->metadata['pc_endorsement'] ?? false)
+                                    Program Coordinator Endorsed
+                                @else
+                                    {{ ucfirst(str_replace('_', ' ', $audit->action)) }}
+                                @endif
+                            </div>
                             <div class="text-muted small">by {{ $audit->performer?->name }}</div>
                             @if($audit->from_status && $audit->to_status && $audit->from_status !== $audit->to_status)
                                 <div class="small">

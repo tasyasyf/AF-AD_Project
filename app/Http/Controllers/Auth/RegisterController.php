@@ -25,8 +25,11 @@ class RegisterController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role'     => ['required', 'in:afad,executive,admin'],
+            'role'     => ['required', 'in:afad,executive,pc,admin'],
         ]);
+
+        $data['is_active'] = true;
+        $data['email_verified_at'] = now();
 
         $user = User::create($data);
 
@@ -40,6 +43,7 @@ class RegisterController extends Controller
     {
         return match (Auth::user()->role) {
             'executive' => redirect()->route('executive.dashboard'),
+            'pc'        => redirect()->route('pc.dashboard'),
             'admin'     => redirect()->route('admin.dashboard'),
             default     => redirect()->route('afad.dashboard'),
         };

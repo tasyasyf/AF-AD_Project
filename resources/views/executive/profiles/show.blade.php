@@ -4,13 +4,9 @@
     <h5 class="fw-bold mb-0">Profile: {{ $profile->full_name }}</h5>
     <div class="d-flex gap-2">
         @if($profile->status !== 'verified')
-            <form method="POST" action="{{ route('executive.profiles.verify', $profile) }}"
-                onsubmit="return confirm('Verify this profile?')">
-                @csrf
-                <button type="submit" class="btn btn-success btn-sm">
-                    <i class="bi bi-check-circle me-1"></i> Verify Profile
-                </button>
-            </form>
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#verifyModal">
+                <i class="bi bi-check-circle me-1"></i> Verify Profile
+            </button>
             <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
                 <i class="bi bi-x-circle me-1"></i> Reject
             </button>
@@ -75,11 +71,9 @@
                                 <div class="text-success small"><i class="bi bi-file-earmark-check"></i> {{ $cert->file_original_name }}</div>
                             @endif
                         </div>
-                        @if($cert->is_verified)
-                            <span class="badge bg-success">Verified</span>
-                        @else
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @endif
+                        <span class="badge {{ $profile->status === 'verified' ? 'bg-success' : 'bg-warning text-dark' }}">
+                            {{ $profile->status === 'verified' ? 'Verified with Profile' : 'Pending Profile Review' }}
+                        </span>
                     </div>
                 @empty
                     <div class="text-muted small text-center py-3">No certificates uploaded.</div>
@@ -119,6 +113,26 @@
 </div>
 
 <!-- Reject Modal -->
+@php
+    $rejectionSectionOptions = [
+        'personal' => 'Personal Information',
+        'qualification' => 'Qualification',
+        'bank' => 'Bank Information',
+        'resume' => 'Resume / CV',
+        'certificates' => 'Certificates',
+        'other' => 'Other',
+    ];
+@endphp
+
+<x-confirm-modal
+    id="verifyModal"
+    title="Verify Profile"
+    message="Verify this profile?"
+    :action="route('executive.profiles.verify', $profile)"
+    confirmText="Verify Profile"
+    confirmClass="btn-success"
+/>
+
 <x-confirm-modal
     id="rejectModal"
     title="Reject Profile"
@@ -126,7 +140,10 @@
     :action="route('executive.profiles.reject', $profile)"
     confirmText="Reject Profile"
     confirmClass="btn-danger"
-    :fields="[['name'=>'rejection_reason','label'=>'Rejection Reason','required'=>true,'placeholder'=>'Enter reason...']]"
+    :fields="[
+        ['name'=>'rejection_sections','label'=>'Section(s) to Edit','type'=>'checkboxes','required'=>true,'options'=>$rejectionSectionOptions],
+        ['name'=>'rejection_reason','label'=>'Rejection Reason','required'=>true,'placeholder'=>'Explain exactly what the AF/AD needs to fix...'],
+    ]"
 />
 
 </x-layouts.app>

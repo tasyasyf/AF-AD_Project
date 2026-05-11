@@ -18,8 +18,21 @@
                     <dt class="col-sm-3 text-muted">Type</dt><dd class="col-sm-9">{{ $submission->type_label }}</dd>
                     <dt class="col-sm-3 text-muted">Date</dt><dd class="col-sm-9">{{ ($submission->submission_date ?? $submission->created_at)->format('d M Y') }}</dd>
                     @if($submission->isVideoRecording())
+                        <dt class="col-sm-3 text-muted">Claim Hours</dt><dd class="col-sm-9">{{ $submission->claim_hours ? number_format($submission->claim_hours, 2) : '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Rate per Hour</dt><dd class="col-sm-9">{{ $submission->rate_per_hour ? 'RM ' . number_format($submission->rate_per_hour, 2) : '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">Total Amount</dt><dd class="col-sm-9">{{ $submission->total_amount ? 'RM ' . number_format($submission->total_amount, 2) : '—' }}</dd>
                         <dt class="col-sm-3 text-muted">Tutorial</dt><dd class="col-sm-9">Tutorial {{ $submission->tutorial_number ?? '—' }}</dd>
-                        <dt class="col-sm-3 text-muted">Duration</dt><dd class="col-sm-9">{{ $submission->video_duration_minutes ? number_format($submission->video_duration_minutes, 2) . ' minutes' : '—' }}</dd>
+                        @if($submission->hasVideoLink())
+                            <dt class="col-sm-3 text-muted">Total Duration</dt><dd class="col-sm-9">{{ $submission->video_duration_minutes ? number_format($submission->video_duration_minutes, 2) . ' minutes' : '—' }}</dd>
+                            <dt class="col-sm-3 text-muted">Video Link</dt>
+                            <dd class="col-sm-9">
+                                <a href="{{ $submission->video_link }}" target="_blank" rel="noopener" class="text-decoration-none">
+                                    {{ $submission->video_link }}
+                                </a>
+                            </dd>
+                        @else
+                            <dt class="col-sm-3 text-muted">Total Duration</dt><dd class="col-sm-9">{{ $submission->video_duration_minutes ? number_format($submission->video_duration_minutes, 2) . ' minutes' : '—' }}</dd>
+                        @endif
                     @endif
                     @if($submission->isQuestionBankAnswerSheet())
                         <dt class="col-sm-3 text-muted">Semester Intake</dt><dd class="col-sm-9">{{ $submission->semester_intake ?? '—' }}</dd>
@@ -38,13 +51,19 @@
             </div>
         </div>
         <div class="card">
-            <div class="card-header bg-white fw-semibold">File</div>
+            <div class="card-header bg-white fw-semibold">{{ $submission->hasVideoLink() ? 'Video Recording Link' : 'File' }}</div>
             <div class="card-body d-flex align-items-center justify-content-between gap-3">
                 <div>
-                    <div class="fw-semibold">{{ $submission->file_original_name }}</div>
-                    <div class="text-muted small">{{ number_format($submission->file_size / 1024, 1) }} KB</div>
+                    <div class="fw-semibold">{{ $submission->hasVideoLink() ? 'Video recording link' : $submission->file_original_name }}</div>
+                    <div class="text-muted small text-break">
+                        {{ $submission->hasVideoLink() ? $submission->video_link : number_format($submission->file_size / 1024, 1) . ' KB' }}
+                    </div>
                 </div>
-                <a href="{{ route('admin.submissions.download', $submission) }}" class="btn btn-outline-primary">Download</a>
+                @if($submission->hasVideoLink())
+                    <a href="{{ $submission->video_link }}" target="_blank" rel="noopener" class="btn btn-outline-primary">Open Link</a>
+                @else
+                    <a href="{{ route('admin.submissions.download', $submission) }}" class="btn btn-outline-primary">Download</a>
+                @endif
             </div>
         </div>
     </div>

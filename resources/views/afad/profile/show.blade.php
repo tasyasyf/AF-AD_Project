@@ -89,7 +89,7 @@
                 @forelse($profile->certificates as $cert)
                     <div class="d-flex align-items-start gap-3 py-3 {{ !$loop->last ? 'border-bottom' : '' }}">
                         <div class="flex-shrink-0">
-                            <i class="bi bi-award fs-4 {{ $cert->is_verified ? 'text-success' : 'text-muted' }}"></i>
+                            <i class="bi bi-award fs-4 {{ $profile->status === 'verified' ? 'text-success' : 'text-muted' }}"></i>
                         </div>
                         <div class="flex-grow-1">
                             <div class="fw-semibold">{{ $cert->title }}</div>
@@ -102,8 +102,8 @@
                             @endif
                         </div>
                         <div>
-                            <span class="badge {{ $cert->is_verified ? 'bg-success' : 'bg-warning text-dark' }}">
-                                {{ $cert->is_verified ? 'Verified' : 'Pending' }}
+                            <span class="badge {{ $profile->status === 'verified' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                {{ $profile->status === 'verified' ? 'Verified with Profile' : 'Pending Profile Review' }}
                             </span>
                         </div>
                     </div>
@@ -126,7 +126,32 @@
                     </div>
                 @elseif($profile->status === 'rejected')
                     <div class="alert alert-danger text-start mt-3 py-2 small">
+                        @php
+                            $sectionLabels = [
+                                'personal' => 'Personal Information',
+                                'qualification' => 'Qualification',
+                                'bank' => 'Bank Information',
+                                'resume' => 'Resume / CV',
+                                'certificates' => 'Certificates',
+                                'other' => 'Other',
+                            ];
+                            $sections = collect($profile->rejection_sections ?? [])
+                                ->map(fn ($section) => $sectionLabels[$section] ?? ucfirst($section));
+                        @endphp
+                        @if($sections->isNotEmpty())
+                            <strong>Edit section:</strong>
+                            <div class="mt-1 mb-2">
+                                @foreach($sections as $section)
+                                    <span class="badge bg-light text-dark border me-1 mb-1">{{ $section }}</span>
+                                @endforeach
+                            </div>
+                        @endif
                         <strong>Reason:</strong> {{ $profile->rejection_reason }}
+                        <div class="mt-2">
+                            <a href="{{ route('afad.profile.edit') }}" class="btn btn-sm btn-danger">
+                                Edit Profile
+                            </a>
+                        </div>
                     </div>
                 @endif
             </div>

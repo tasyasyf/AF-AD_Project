@@ -38,6 +38,7 @@ class SubmissionController extends Controller
 
     public function download(Submission $submission): StreamedResponse
     {
+        abort_if($submission->hasVideoLink(), 404);
         abort_if(!Storage::disk('local')->exists($submission->file_path), 404);
         return Storage::disk('local')->download($submission->file_path, $submission->file_original_name);
     }

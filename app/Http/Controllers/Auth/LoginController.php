@@ -55,6 +55,7 @@ class LoginController extends Controller
     {
         return match (Auth::user()->role) {
             'executive' => redirect()->route('executive.dashboard'),
+            'pc'        => redirect()->route('pc.dashboard'),
             'admin'     => redirect()->route('admin.dashboard'),
             default     => redirect()->route('afad.dashboard'),
         };

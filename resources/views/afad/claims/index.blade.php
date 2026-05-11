@@ -50,4 +50,6 @@
     </div>
 </div>
 
+@include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
+
 </x-layouts.app>

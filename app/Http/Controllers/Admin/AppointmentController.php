@@ -47,7 +47,7 @@ class AppointmentController extends Controller
             'profile_id'       => ['required', 'exists:profiles,id'],
             'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
             'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
-            'role_type'        => ['required', 'in:af,ad'],
+            'role_type'        => ['required', 'in:af,ad,af_internal,ad_internal'],
             'semester'         => ['required', 'string', 'in:January,May,September'],
             'academic_session' => ['required', 'string', 'max:20'],
             'start_date'       => ['required', 'date'],
@@ -78,7 +78,7 @@ class AppointmentController extends Controller
         $data = $request->validate([
             'course_code'      => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
             'course_name'      => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
-            'role_type'        => ['required', 'in:af,ad'],
+            'role_type'        => ['required', 'in:af,ad,af_internal,ad_internal'],
             'semester'         => ['required', 'string', 'max:20'],
             'academic_session' => ['required', 'string', 'max:20'],
             'start_date'       => ['required', 'date'],

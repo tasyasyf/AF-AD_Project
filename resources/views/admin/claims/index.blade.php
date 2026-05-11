@@ -37,6 +37,7 @@
                         <th>Amount (RM)</th>
                         <th>Submitted</th>
                         <th>Status</th>
+                        <th>PC Endorsement</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -51,6 +52,15 @@
                         <td class="small text-muted">{{ $claim->submitted_at?->format('d M Y') ?? '—' }}</td>
                         <td><x-status-badge :status="$claim->status" /></td>
                         <td>
+                            @if($claim->pc_endorsed_at)
+                                <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Endorsed</span>
+                            @elseif($claim->status === 'approved')
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+                            @else
+                                <span class="text-muted small">-</span>
+                            @endif
+                        </td>
+                        <td>
                             <div class="d-flex gap-1">
                                 <a href="{{ route('admin.claims.show', $claim) }}" class="btn btn-sm btn-outline-secondary">View</a>
                                 <a href="{{ route('admin.claims.edit', $claim) }}" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -62,7 +72,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="8" class="text-center text-muted py-4">No claims found.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">No claims found.</td></tr>
                     @endforelse
                 </tbody>
             </table>

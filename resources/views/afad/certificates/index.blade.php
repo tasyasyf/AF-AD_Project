@@ -24,7 +24,7 @@
                             <th>Institution</th>
                             <th>Year</th>
                             <th>File</th>
-                            <th>Verified</th>
+                            <th>Profile Review</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -42,11 +42,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if($cert->is_verified)
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Verified</span>
-                                @else
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                @endif
+                                <span class="badge {{ $profile->status === 'verified' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                    {{ $profile->status === 'verified' ? 'Verified with Profile' : 'Pending Profile Review' }}
+                                </span>
                             </td>
                             <td>
                                 <form method="POST" action="{{ route('afad.certificates.destroy', $cert) }}"

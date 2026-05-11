@@ -25,12 +25,21 @@
                     </thead>
                     <tbody>
                         @foreach($appointments as $appt)
+                        @php
+                            $roleLabels = [
+                                'af' => 'AF',
+                                'ad' => 'AD',
+                                'af_internal' => 'AF Internal',
+                                'ad_internal' => 'AD Internal',
+                            ];
+                            $roleClass = str_contains($appt->role_type, 'af') ? 'bg-primary' : 'bg-info';
+                        @endphp
                         <tr>
                             <td class="fw-semibold">{{ $appt->course_code }}</td>
                             <td>{{ $appt->course_name }}</td>
                             <td>
-                                <span class="badge {{ $appt->role_type === 'af' ? 'bg-primary' : 'bg-info' }}">
-                                    {{ strtoupper($appt->role_type) }}
+                                <span class="badge {{ $roleClass }}">
+                                    {{ $roleLabels[$appt->role_type] ?? strtoupper($appt->role_type) }}
                                 </span>
                             </td>
                             <td>{{ $appt->semester }}</td>

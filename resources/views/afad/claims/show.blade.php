@@ -3,6 +3,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5 class="fw-bold mb-0">{{ $claim->claim_reference }}</h5>
     <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#printPreviewModal">
+            <i class="bi bi-eye me-1"></i> Preview Print
+        </button>
         @if(in_array($claim->status, ['draft', 'returned']))
             <a href="{{ route('afad.claims.edit', $claim) }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-pencil me-1"></i> Edit
@@ -31,12 +34,22 @@
     </div>
 </div>
 
-@if($claim->status === 'returned' && $claim->executive_remarks)
+@if($claim->status === 'returned' && ($claim->executive_remarks || $claim->pc_remarks))
     <div class="alert alert-warning d-flex gap-2 mb-4">
         <i class="bi bi-arrow-counterclockwise fs-5 mt-1"></i>
         <div>
             <strong>Returned for Revision</strong><br>
-            <span class="small">{{ $claim->executive_remarks }}</span>
+            <span class="small">{{ $claim->pc_remarks ?? $claim->executive_remarks }}</span>
+        </div>
+    </div>
+@endif
+
+@if($claim->pc_endorsed_at)
+    <div class="alert alert-success d-flex gap-2 mb-4">
+        <i class="bi bi-check2-circle fs-5 mt-1"></i>
+        <div>
+            <strong>Endorsed by Program Coordinator</strong><br>
+            <span class="small">Your claim has been endorsed. Finance submission is handled manually outside the system.</span>
         </div>
     </div>
 @endif
@@ -54,12 +67,31 @@
                     <dd class="col-sm-8 fw-semibold">{{ $claim->claim_reference }}</dd>
                     <dt class="col-sm-4 text-muted">Course</dt>
                     <dd class="col-sm-8">{{ $claim->appointment->course_code }} – {{ $claim->appointment->course_name }}</dd>
-                    <dt class="col-sm-4 text-muted">Claim Type</dt>
-                    <dd class="col-sm-8">{{ ucfirst(str_replace('_', ' ', $claim->claim_type)) }}</dd>
-                    <dt class="col-sm-4 text-muted">Total Hours</dt>
-                    <dd class="col-sm-8">{{ $claim->total_hours }} hours</dd>
-                    <dt class="col-sm-4 text-muted">Rate / Hour</dt>
-                    <dd class="col-sm-8">RM {{ number_format($claim->rate_per_hour, 2) }}</dd>
+                    <dt class="col-sm-4 text-muted">Claim Types</dt>
+                    <dd class="col-sm-8">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th class="text-end">Hours</th>
+                                        <th class="text-end">Rate</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($claim->displayClaimItems() as $item)
+                                        <tr>
+                                            <td>{{ ucfirst(str_replace('_', ' ', $item['claim_type'])) }}</td>
+                                            <td class="text-end">{{ ($item['claim_type'] ?? '') === 'teaching' ? number_format((float) ($item['total_hours'] ?? 0), 2) : '—' }}</td>
+                                            <td class="text-end">RM {{ number_format((float) ($item['rate'] ?? 0), 2) }}</td>
+                                            <td class="text-end">RM {{ number_format((float) ($item['amount'] ?? 0), 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </dd>
                     <dt class="col-sm-4 text-muted">Total Amount</dt>
                     <dd class="col-sm-8 fw-bold text-primary fs-5">RM {{ number_format($claim->total_amount, 2) }}</dd>
                     @if($claim->submitted_at)
@@ -69,6 +101,14 @@
                     @if($claim->executive_remarks)
                         <dt class="col-sm-4 text-muted">Executive Remarks</dt>
                         <dd class="col-sm-8">{{ $claim->executive_remarks }}</dd>
+                    @endif
+                    @if($claim->pc_remarks)
+                        <dt class="col-sm-4 text-muted">PC Remarks</dt>
+                        <dd class="col-sm-8">{{ $claim->pc_remarks }}</dd>
+                    @endif
+                    @if($claim->pc_endorsed_at)
+                        <dt class="col-sm-4 text-muted">PC Endorsed</dt>
+                        <dd class="col-sm-8">{{ $claim->pc_endorsed_at->format('d M Y H:i') }}</dd>
                     @endif
                 </dl>
                 <hr>
@@ -89,28 +129,6 @@
             </div>
         </div>
 
-        <!-- Document Checklist -->
-        <div class="card">
-            <div class="card-header bg-white fw-semibold">
-                Supporting Documents
-                @php
-                    $uploaded = $claim->documents->where('is_uploaded', true)->count();
-                    $required = $claim->documents->where('is_required', true)->count();
-                    $uploadedRequired = $claim->documents->where('is_required', true)->where('is_uploaded', true)->count();
-                @endphp
-                <span class="badge bg-{{ $uploadedRequired >= $required ? 'success' : 'warning text-dark' }} ms-2">
-                    {{ $uploadedRequired }}/{{ $required }} required uploaded
-                </span>
-            </div>
-            <div class="card-body">
-                @forelse($claim->documents as $doc)
-                    <x-document-row :document="$doc" :claim="$claim"
-                        :editable="in_array($claim->status, ['draft', 'returned'])" />
-                @empty
-                    <p class="text-muted small mb-0">No documents required.</p>
-                @endforelse
-            </div>
-        </div>
     </div>
 
     <div class="col-lg-5">
@@ -136,5 +154,7 @@
         </div>
     </div>
 </div>
+
+@include('afad.claims.partials.print-preview-saved', ['claim' => $claim, 'videoRecordingRows' => $videoRecordingRows])
 
 </x-layouts.app>

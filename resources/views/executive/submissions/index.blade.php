@@ -49,7 +49,7 @@
                             <td class="small text-muted">
                                 @if($sub->isVideoRecording())
                                     Tutorial {{ $sub->tutorial_number ?? '—' }}<br>
-                                    {{ $sub->video_duration_minutes ? number_format($sub->video_duration_minutes, 2) . ' min' : '—' }}
+                                    Link submission
                                 @elseif($sub->isQuestionBankAnswerSheet())
                                     {{ $sub->semester_intake ?? '—' }}<br>
                                     {{ $sub->course ?? '—' }}
@@ -61,10 +61,17 @@
                                 @endif
                             </td>
                             <td class="small">
-                                <a href="{{ route('executive.submissions.download', $sub) }}" class="text-decoration-none">
-                                    <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
-                                    {{ $sub->file_original_name }}
-                                </a>
+                                @if($sub->hasVideoLink())
+                                    <a href="{{ $sub->video_link }}" target="_blank" rel="noopener" class="text-decoration-none">
+                                        <i class="bi bi-link-45deg text-primary me-1"></i>
+                                        Open Link
+                                    </a>
+                                @else
+                                    <a href="{{ route('executive.submissions.download', $sub) }}" class="text-decoration-none">
+                                        <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
+                                        {{ $sub->file_original_name }}
+                                    </a>
+                                @endif
                             </td>
                             <td class="small text-muted">{{ ($sub->submission_date ?? $sub->created_at)->format('d M Y') }}</td>
                             <td>

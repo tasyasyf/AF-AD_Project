@@ -2,7 +2,6 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5 class="fw-bold mb-0">All Certificates</h5>
-    <a href="{{ route('admin.certificates.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i> New Certificate</a>
 </div>
 
 <div class="card mb-3">

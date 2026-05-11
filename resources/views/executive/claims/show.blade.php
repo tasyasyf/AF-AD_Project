@@ -35,15 +35,19 @@
                             <dd class="fw-semibold">{{ $claim->profile->full_name }}</dd>
                             <dt class="text-muted small">Course</dt>
                             <dd>{{ $claim->appointment->course_code }} – {{ $claim->appointment->course_name }}</dd>
-                            <dt class="text-muted small">Claim Type</dt>
-                            <dd>{{ ucfirst(str_replace('_', ' ', $claim->claim_type)) }}</dd>
+                            <dt class="text-muted small">Claim Types</dt>
+                            <dd>
+                                @foreach($claim->displayClaimItems() as $item)
+                                    <div>{{ ucfirst(str_replace('_', ' ', $item['claim_type'])) }} - RM {{ number_format((float) ($item['amount'] ?? 0), 2) }}</div>
+                                @endforeach
+                            </dd>
                         </dl>
                     </div>
                     <div class="col-md-6">
                         <dl class="mb-0">
                             <dt class="text-muted small">Total Hours</dt>
                             <dd>{{ $claim->total_hours }} hours</dd>
-                            <dt class="text-muted small">Rate / Hour</dt>
+                            <dt class="text-muted small">Summary Rate</dt>
                             <dd>RM {{ number_format($claim->rate_per_hour, 2) }}</dd>
                             <dt class="text-muted small">Total Amount</dt>
                             <dd class="fw-bold text-primary fs-5">RM {{ number_format($claim->total_amount, 2) }}</dd>
@@ -92,6 +96,15 @@
 
     <div class="col-lg-4">
         <!-- Bank Info -->
+        @if($claim->status === 'approved')
+            <div class="card mb-4">
+                <div class="card-header bg-white fw-semibold">Next Step</div>
+                <div class="card-body small">
+                    This approved claim will be reviewed and endorsed by the Program Coordinator before the printed form is sent to Finance manually.
+                </div>
+            </div>
+        @endif
+
         <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Payment Details</div>
             <div class="card-body small">

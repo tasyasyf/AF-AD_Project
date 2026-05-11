@@ -122,8 +122,8 @@
                                         </div>
                                     @endif
                                 </div>
-                                <span class="badge {{ $cert->is_verified ? 'bg-success' : 'bg-warning text-dark' }}">
-                                    {{ $cert->is_verified ? 'Verified' : 'Pending' }}
+                                <span class="badge {{ $profile->status === 'verified' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                    {{ $profile->status === 'verified' ? 'Verified with Profile' : 'Pending Profile Review' }}
                                 </span>
                             </div>
                         </div>

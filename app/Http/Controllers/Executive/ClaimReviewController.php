@@ -54,7 +54,7 @@ class ClaimReviewController extends Controller
         ClaimAudit::record($claim, 'approved', $oldStatus, 'approved', $request->remarks);
 
         return redirect()->route('executive.claims.show', $claim)
-            ->with('success', "Claim {$claim->claim_reference} has been approved.");
+            ->with('success', "Claim {$claim->claim_reference} has been approved and is ready for Program Coordinator endorsement.");
     }
 
     public function return(Request $request, Claim $claim): RedirectResponse

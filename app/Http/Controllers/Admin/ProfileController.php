@@ -36,9 +36,9 @@ class ProfileController extends Controller
         return view('admin.profiles.show', compact('profile'));
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('admin.profiles.create');
+        return redirect()->route('admin.users.create');
     }
 
     public function store(Request $request): RedirectResponse

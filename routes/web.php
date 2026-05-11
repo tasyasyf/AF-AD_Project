@@ -5,6 +5,7 @@ use App\Http\Controllers\AfAd;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Executive;
+use App\Http\Controllers\ProgramCoordinator;
 use Illuminate\Support\Facades\Route;
 
 // Root redirect
@@ -28,46 +29,51 @@ Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(f
     Route::get('/profile/edit', [AfAd\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [AfAd\ProfileController::class, 'update'])->name('profile.update');
 
-    // Certificates
-    Route::get('/certificates', [AfAd\CertificateController::class, 'index'])->name('certificates.index');
-    Route::get('/certificates/create', [AfAd\CertificateController::class, 'create'])->name('certificates.create');
-    Route::post('/certificates', [AfAd\CertificateController::class, 'store'])->name('certificates.store');
-    Route::delete('/certificates/{certificate}', [AfAd\CertificateController::class, 'destroy'])->name('certificates.destroy');
+    Route::middleware('afad.profile.complete')->group(function () {
+        // Certificates
+        Route::get('/certificates', [AfAd\CertificateController::class, 'index'])->name('certificates.index');
+        Route::get('/certificates/create', [AfAd\CertificateController::class, 'create'])->name('certificates.create');
+        Route::post('/certificates', [AfAd\CertificateController::class, 'store'])->name('certificates.store');
+        Route::delete('/certificates/{certificate}', [AfAd\CertificateController::class, 'destroy'])->name('certificates.destroy');
 
-    // Classes
-    Route::get('/classes', [AfAd\ClassController::class, 'index'])->name('classes.index');
-    Route::get('/classes/create', [AfAd\ClassController::class, 'create'])->name('classes.create');
-    Route::post('/classes', [AfAd\ClassController::class, 'store'])->name('classes.store');
-    Route::get('/classes/{class}', [AfAd\ClassController::class, 'show'])->name('classes.show');
-    Route::get('/classes/{class}/edit', [AfAd\ClassController::class, 'edit'])->name('classes.edit');
-    Route::put('/classes/{class}', [AfAd\ClassController::class, 'update'])->name('classes.update');
-    Route::delete('/classes/{class}', [AfAd\ClassController::class, 'destroy'])->name('classes.destroy');
+        // Appointments (read-only)
+        Route::get('/appointments', [AfAd\AppointmentController::class, 'index'])->name('appointments.index');
+        Route::get('/appointments/{appointment}', [AfAd\AppointmentController::class, 'show'])->name('appointments.show');
 
-    // Appointments (read-only)
-    Route::get('/appointments', [AfAd\AppointmentController::class, 'index'])->name('appointments.index');
-    Route::get('/appointments/{appointment}', [AfAd\AppointmentController::class, 'show'])->name('appointments.show');
+        Route::middleware('afad.profile.verified')->group(function () {
+            // Classes
+            Route::get('/classes', [AfAd\ClassController::class, 'index'])->name('classes.index');
+            Route::get('/classes/create', [AfAd\ClassController::class, 'create'])->name('classes.create');
+            Route::post('/classes', [AfAd\ClassController::class, 'store'])->name('classes.store');
+            Route::get('/classes/{class}', [AfAd\ClassController::class, 'show'])->name('classes.show');
+            Route::get('/classes/{class}/edit', [AfAd\ClassController::class, 'edit'])->name('classes.edit');
+            Route::put('/classes/{class}', [AfAd\ClassController::class, 'update'])->name('classes.update');
+            Route::delete('/classes/{class}', [AfAd\ClassController::class, 'destroy'])->name('classes.destroy');
 
-    // Claims
-    Route::get('/claims', [AfAd\ClaimController::class, 'index'])->name('claims.index');
-    Route::get('/claims/create', [AfAd\ClaimController::class, 'create'])->name('claims.create');
-    Route::post('/claims', [AfAd\ClaimController::class, 'store'])->name('claims.store');
-    Route::get('/claims/{claim}', [AfAd\ClaimController::class, 'show'])->name('claims.show');
-    Route::get('/claims/{claim}/edit', [AfAd\ClaimController::class, 'edit'])->name('claims.edit');
-    Route::put('/claims/{claim}', [AfAd\ClaimController::class, 'update'])->name('claims.update');
-    Route::post('/claims/{claim}/submit', [AfAd\ClaimController::class, 'submit'])->name('claims.submit');
-    Route::delete('/claims/{claim}', [AfAd\ClaimController::class, 'destroy'])->name('claims.destroy');
+            // Claims
+            Route::get('/claims', [AfAd\ClaimController::class, 'index'])->name('claims.index');
+            Route::get('/claims/create', [AfAd\ClaimController::class, 'create'])->name('claims.create');
+            Route::post('/claims', [AfAd\ClaimController::class, 'store'])->name('claims.store');
+            Route::get('/claims/{claim}', [AfAd\ClaimController::class, 'show'])->name('claims.show');
+            Route::get('/claims/{claim}/edit', [AfAd\ClaimController::class, 'edit'])->name('claims.edit');
+            Route::put('/claims/{claim}', [AfAd\ClaimController::class, 'update'])->name('claims.update');
+            Route::post('/claims/{claim}/submit', [AfAd\ClaimController::class, 'submit'])->name('claims.submit');
+            Route::delete('/claims/{claim}', [AfAd\ClaimController::class, 'destroy'])->name('claims.destroy');
 
-    // Claim documents
-    Route::post('/claims/{claim}/documents/{document}/upload', [AfAd\ClaimDocumentController::class, 'upload'])->name('claims.documents.upload');
-    Route::delete('/claims/{claim}/documents/{document}', [AfAd\ClaimDocumentController::class, 'remove'])->name('claims.documents.remove');
+            // Claim documents
+            Route::post('/claims/{claim}/documents/{document}/upload', [AfAd\ClaimDocumentController::class, 'upload'])->name('claims.documents.upload');
+            Route::delete('/claims/{claim}/documents/{document}', [AfAd\ClaimDocumentController::class, 'remove'])->name('claims.documents.remove');
 
-    // Submissions (video recording link uploads)
-    Route::get('/submissions', [AfAd\SubmissionController::class, 'index'])->name('submissions.index');
-    Route::get('/submissions/create', [AfAd\SubmissionController::class, 'create'])->name('submissions.create');
-    Route::post('/submissions', [AfAd\SubmissionController::class, 'store'])->name('submissions.store');
-    Route::get('/submissions/{submission}', [AfAd\SubmissionController::class, 'show'])->name('submissions.show');
-    Route::get('/submissions/{submission}/download', [AfAd\SubmissionController::class, 'download'])->name('submissions.download');
-    Route::delete('/submissions/{submission}', [AfAd\SubmissionController::class, 'destroy'])->name('submissions.destroy');
+            // Submissions (video recording link uploads)
+            Route::get('/submissions', [AfAd\SubmissionController::class, 'index'])->name('submissions.index');
+            Route::get('/submissions/create', [AfAd\SubmissionController::class, 'create'])->name('submissions.create');
+            Route::post('/submissions', [AfAd\SubmissionController::class, 'store'])->name('submissions.store');
+            Route::get('/submissions/{submission}', [AfAd\SubmissionController::class, 'show'])->name('submissions.show');
+            Route::post('/submissions/{submission}/duration', [AfAd\SubmissionController::class, 'updateVideoDuration'])->name('submissions.duration');
+            Route::get('/submissions/{submission}/download', [AfAd\SubmissionController::class, 'download'])->name('submissions.download');
+            Route::delete('/submissions/{submission}', [AfAd\SubmissionController::class, 'destroy'])->name('submissions.destroy');
+        });
+    });
 });
 
 // Executive routes
@@ -100,6 +106,26 @@ Route::prefix('executive')->name('executive.')->middleware(['auth', 'role:execut
     Route::get('/submissions/{submission}', [Executive\SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/submissions/{submission}/download', [Executive\SubmissionController::class, 'download'])->name('submissions.download');
     Route::post('/submissions/{submission}/review', [Executive\SubmissionController::class, 'review'])->name('submissions.review');
+});
+
+// Program Coordinator routes
+Route::prefix('pc')->name('pc.')->middleware(['auth', 'role:pc'])->group(function () {
+    Route::get('/dashboard', [ProgramCoordinator\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/afad', [ProgramCoordinator\AfAdController::class, 'index'])->name('afad.index');
+    Route::get('/afad/{profile}', [ProgramCoordinator\AfAdController::class, 'show'])->name('afad.show');
+
+    Route::get('/appointments', [ProgramCoordinator\AppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('/appointments/create', [ProgramCoordinator\AppointmentController::class, 'create'])->name('appointments.create');
+    Route::post('/appointments', [ProgramCoordinator\AppointmentController::class, 'store'])->name('appointments.store');
+    Route::get('/nomination', [ProgramCoordinator\NominationController::class, 'index'])->name('nomination.index');
+    Route::get('/document-checklist', [ProgramCoordinator\DocumentChecklistController::class, 'index'])->name('document-checklist.index');
+    Route::get('/claims', [ProgramCoordinator\ClaimReviewController::class, 'index'])->name('claims.index');
+    Route::get('/claims/{claim}', [ProgramCoordinator\ClaimReviewController::class, 'show'])->name('claims.show');
+    Route::post('/claims/{claim}/endorse', [ProgramCoordinator\ClaimReviewController::class, 'endorse'])->name('claims.endorse');
+    Route::post('/claims/{claim}/return', [ProgramCoordinator\ClaimReviewController::class, 'return'])->name('claims.return');
+    Route::get('/reports', [ProgramCoordinator\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [ProgramCoordinator\ReportController::class, 'export'])->name('reports.export');
 });
 
 // Admin routes

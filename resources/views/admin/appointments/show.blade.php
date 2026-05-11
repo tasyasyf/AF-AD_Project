@@ -34,8 +34,17 @@
                     <dd class="col-sm-8">{{ $appointment->course_name }}</dd>
                     <dt class="col-sm-4 text-muted">Role</dt>
                     <dd class="col-sm-8">
-                        <span class="badge {{ $appointment->role_type === 'af' ? 'bg-primary' : 'bg-info' }}">
-                            {{ $appointment->role_type === 'af' ? 'AF' : 'AD' }}
+                        @php
+                            $roleLabels = [
+                                'af' => 'AF',
+                                'ad' => 'AD',
+                                'af_internal' => 'AF Internal',
+                                'ad_internal' => 'AD Internal',
+                            ];
+                            $roleClass = str_contains($appointment->role_type, 'af') ? 'bg-primary' : 'bg-info';
+                        @endphp
+                        <span class="badge {{ $roleClass }}">
+                            {{ $roleLabels[$appointment->role_type] ?? strtoupper($appointment->role_type) }}
                         </span>
                     </dd>
                     <dt class="col-sm-4 text-muted">Semester</dt>

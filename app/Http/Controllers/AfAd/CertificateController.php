@@ -61,8 +61,19 @@ class CertificateController extends Controller
 
         Certificate::create($certData);
 
+        $profile->update([
+            'status' => 'pending',
+            'rejection_reason' => null,
+            'rejection_sections' => null,
+        ]);
+        $profile->certificates()->update([
+            'is_verified' => false,
+            'verified_by' => null,
+            'verified_at' => null,
+        ]);
+
         return redirect()->route('afad.certificates.index')
-            ->with('success', 'Certificate added successfully.');
+            ->with('success', 'Certificate added. Profile is awaiting verification with all certificates.');
     }
 
     public function destroy(Certificate $certificate): RedirectResponse

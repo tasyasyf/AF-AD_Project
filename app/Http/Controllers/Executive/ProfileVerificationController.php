@@ -43,6 +43,7 @@ class ProfileVerificationController extends Controller
             'verified_by' => auth()->id(),
             'verified_at' => now(),
             'rejection_reason' => null,
+            'rejection_sections' => null,
         ]);
 
         // Also mark all certificates as verified
@@ -59,14 +60,23 @@ class ProfileVerificationController extends Controller
     public function reject(Request $request, Profile $profile): RedirectResponse
     {
         $request->validate([
+            'rejection_sections' => ['required', 'array', 'min:1'],
+            'rejection_sections.*' => ['string', 'in:personal,qualification,bank,resume,certificates,other'],
             'rejection_reason' => ['required', 'string', 'min:10'],
         ]);
 
         $profile->update([
             'status'           => 'rejected',
             'rejection_reason' => $request->rejection_reason,
+            'rejection_sections' => $request->rejection_sections,
             'verified_by'      => auth()->id(),
             'verified_at'      => now(),
+        ]);
+
+        $profile->certificates()->update([
+            'is_verified' => false,
+            'verified_by' => null,
+            'verified_at' => null,
         ]);
 
         return redirect()->route('executive.profiles.show', $profile)

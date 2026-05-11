@@ -39,6 +39,8 @@
                         <select name="role_type" class="form-select @error('role_type') is-invalid @enderror" required>
                             <option value="af" {{ old('role_type', $appointment->role_type) === 'af' ? 'selected' : '' }}>Academic Facilitator (AF)</option>
                             <option value="ad" {{ old('role_type', $appointment->role_type) === 'ad' ? 'selected' : '' }}>Academic Developer (AD)</option>
+                            <option value="af_internal" {{ old('role_type', $appointment->role_type) === 'af_internal' ? 'selected' : '' }}>AF Internal</option>
+                            <option value="ad_internal" {{ old('role_type', $appointment->role_type) === 'ad_internal' ? 'selected' : '' }}>AD Internal</option>
                         </select>
                         @error('role_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

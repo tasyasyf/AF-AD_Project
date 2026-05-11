@@ -20,7 +20,7 @@
                     <i class="bi bi-bank"></i>
                 </div>
                 <h2 class="auth-heading">Create Account</h2>
-                <p class="auth-subtitle">Register your portal access details below.</p>
+                <p class="auth-subtitle">Register your portal access details and account role below.</p>
 
                 @if ($errors->any())
                     <div class="alert alert-danger py-2 small">
@@ -55,13 +55,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="role" class="form-label fw-semibold">Register As</label>
+                        <label for="role" class="form-label fw-semibold">Account Role</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
                             <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
                                 <option value="">Select role...</option>
                                 <option value="afad" {{ old('role') === 'afad' ? 'selected' : '' }}>Academic Facilitator / Developer (AF/AD)</option>
                                 <option value="executive" {{ old('role') === 'executive' ? 'selected' : '' }}>School Executive</option>
+                                <option value="pc" {{ old('role') === 'pc' ? 'selected' : '' }}>Program Coordinator</option>
                                 <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
                             </select>
                         </div>

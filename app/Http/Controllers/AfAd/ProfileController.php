@@ -154,7 +154,17 @@ class ProfileController extends Controller
             $data['resume_size']          = null;
         }
 
-        $profile->update(collect($data)->except(['new_certificates', 'resume', 'remove_resume'])->toArray() + ['status' => 'pending', 'rejection_reason' => null]);
+        $profile->update(collect($data)->except(['new_certificates', 'resume', 'remove_resume'])->toArray() + [
+            'status' => 'pending',
+            'rejection_reason' => null,
+            'rejection_sections' => null,
+        ]);
+
+        $profile->certificates()->update([
+            'is_verified' => false,
+            'verified_by' => null,
+            'verified_at' => null,
+        ]);
 
         // Store new certificates
         if ($request->has('new_certificates')) {

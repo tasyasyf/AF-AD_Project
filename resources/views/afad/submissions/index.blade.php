@@ -46,23 +46,32 @@
                                 @if($sub->isVideoRecording())
                                     <br>Tutorial {{ $sub->tutorial_number ?? '—' }}
                                     @if($sub->video_duration_minutes)
-                                        · {{ number_format($sub->video_duration_minutes, 2) }} min
+                                        <br>{{ number_format($sub->video_duration_minutes, 2) }} min
                                     @endif
                                 @elseif($sub->isQuestionBankAnswerSheet() && $sub->semester_intake)
                                     <br>{{ $sub->semester_intake }}
                                 @endif
                             </td>
                             <td class="small">
-                                @if($sub->claim_hours || $sub->rate_per_hour)
-                                    {{ number_format($sub->claim_hours ?? 0, 2) }} h<br>
+                                @if($sub->total_amount || $sub->rate_per_hour)
+                                    @if($sub->isVideoRecording())
+                                        {{ number_format($sub->claim_hours ?? 0, 2) }} h<br>
+                                    @else
+                                        Rate<br>
+                                    @endif
                                     RM {{ number_format($sub->total_amount ?? 0, 2) }}
                                 @else
                                     —
                                 @endif
                             </td>
                             <td class="small">
-                                <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
-                                {{ $sub->file_original_name }}
+                                @if($sub->hasVideoLink())
+                                    <i class="bi bi-link-45deg text-primary me-1"></i>
+                                    <a href="{{ $sub->video_link }}" target="_blank" rel="noopener" class="text-decoration-none">Open Link</a>
+                                @else
+                                    <i class="bi bi-{{ str_starts_with($sub->file_mime, 'video/') ? 'camera-video text-danger' : (str_contains($sub->file_mime, 'pdf') ? 'file-earmark-pdf text-danger' : 'file-earmark-text text-primary') }} me-1"></i>
+                                    {{ $sub->file_original_name }}
+                                @endif
                             </td>
                             <td class="small text-muted">{{ ($sub->submission_date ?? $sub->created_at)->format('d M Y') }}</td>
                             <td>

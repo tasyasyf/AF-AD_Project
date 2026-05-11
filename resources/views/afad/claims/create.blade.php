@@ -1,5 +1,11 @@
 <x-layouts.app title="New Claim">
 
+@php
+    $videoRecordingRows = $videoRecordingRows ?? [];
+    $printRows = array_slice(array_pad($videoRecordingRows, 4, null), 0, 4);
+    $videoRecordingTotal = collect($videoRecordingRows)->sum('amount');
+@endphp
+
 <style>
     .print-preview-sheet {
         color: #202020;
@@ -214,32 +220,47 @@
                     @endif
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Claim Type <span class="text-danger">*</span></label>
-                    <select name="claim_type" id="claim_type" class="form-select @error('claim_type') is-invalid @enderror" required>
-                        <option value="">Select type...</option>
-                        @foreach(['teaching'=>'Teaching','marking'=>'Marking','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
-                            <option value="{{ $val }}" {{ old('claim_type') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                @php($claimItems = old('claim_items', [['claim_type' => 'teaching', 'total_hours' => '', 'rate' => '']]))
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-semibold mb-0">Claim Types <span class="text-danger">*</span></label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-claim-type">
+                            <i class="bi bi-plus-lg me-1"></i> Add Claim Type
+                        </button>
+                    </div>
+                    <div id="claim-items" class="vstack gap-3">
+                        @foreach($claimItems as $index => $item)
+                            <div class="border rounded p-3 claim-item">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Claim Type</label>
+                                        <select name="claim_items[{{ $index }}][claim_type]" class="form-select claim-type" required>
+                                            @foreach(['teaching'=>'Teaching','marking'=>'Marking','module_development'=>'Module Development','consultation'=>'Consultation'] as $val => $label)
+                                                <option value="{{ $val }}" {{ ($item['claim_type'] ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 claim-hours-wrap">
+                                        <label class="form-label fw-semibold">Total Hours</label>
+                                        <input type="number" name="claim_items[{{ $index }}][total_hours]" class="form-control claim-hours"
+                                            value="{{ $item['total_hours'] ?? '' }}" min="0.5" step="0.01">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold rate-label">Rate per Hour (RM)</label>
+                                        <input type="number" name="claim_items[{{ $index }}][rate]" class="form-control claim-rate"
+                                            value="{{ $item['rate'] ?? '' }}" min="0" step="0.01" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-end">
+                                        <button type="button" class="btn btn-outline-danger remove-claim-type">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-2 claim-line-total">Line total: RM 0.00</div>
+                            </div>
                         @endforeach
-                    </select>
-                    @error('claim_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Total Hours <span class="text-danger">*</span></label>
-                        <input type="number" name="total_hours" id="total_hours"
-                            class="form-control @error('total_hours') is-invalid @enderror"
-                            value="{{ old('total_hours', $submissionTotals['hours'] ?: '') }}" min="0.5" step="0.01" required>
-                        @error('total_hours') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Rate per Hour (RM) <span class="text-danger">*</span></label>
-                        <input type="number" name="rate_per_hour" id="rate_per_hour"
-                            class="form-control @error('rate_per_hour') is-invalid @enderror"
-                            value="{{ old('rate_per_hour', $submissionTotals['rate'] ?: '') }}" min="0" step="0.01" required>
-                        @error('rate_per_hour') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                    @error('claim_items') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
                 </div>
 
                 @if(($submissionTotals['amount'] ?? 0) > 0)
@@ -248,7 +269,7 @@
                         <div>
                             <div class="fw-semibold">Auto-filled from uploaded submissions</div>
                             <div class="text-muted small">
-                                {{ number_format($submissionTotals['hours'], 2) }} hours · average RM {{ number_format($submissionTotals['rate'], 2) }}/hour · total RM {{ number_format($submissionTotals['amount'], 2) }}
+                                Submission total: RM {{ number_format($submissionTotals['amount'], 2) }}
                             </div>
                         </div>
                     </div>
@@ -286,6 +307,24 @@
                             </div>
                         @endforeach
                     </div>
+                    @if(($uploadedSubmissions ?? collect())->isNotEmpty())
+                        <div class="border rounded mt-3 p-3 bg-light">
+                            <div class="fw-semibold small mb-2">Uploaded submissions included</div>
+                            <div class="vstack gap-2">
+                                @foreach($uploadedSubmissions as $submission)
+                                    <div class="d-flex justify-content-between gap-3 small">
+                                        <span>
+                                            <i class="bi bi-check2 text-success me-1"></i>
+                                            {{ $submission->type_label }} - {{ $submission->title }}
+                                        </span>
+                                        <span class="text-muted text-nowrap">
+                                            {{ $submission->submission_date?->format('d M Y') ?? $submission->created_at->format('d M Y') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="alert alert-light border d-flex align-items-center gap-2 mb-0">
@@ -297,6 +336,8 @@
                 </div>
             </div>
         </div>
+
+        @include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
 
         <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Bank Details</div>
@@ -407,24 +448,29 @@
                         </thead>
                         <tbody>
                             @for($i = 1; $i <= 4; $i++)
+                                @php($row = $printRows[$i - 1])
                                 <tr>
                                     <td rowspan="2" class="text-center">{{ $i }}</td>
-                                    <td rowspan="2">{{ $i === 1 ? '' : '' }}<span @if($i === 1) id="preview-course-code" @endif></span></td>
-                                    <td rowspan="2"><span @if($i === 1) id="preview-course-name" @endif></span></td>
+                                    <td rowspan="2">{{ $row['course'] ?? '' }}</td>
+                                    <td rowspan="2">{{ $row['course_name'] ?? '' }}</td>
                                     <td class="text-center">Date</td>
-                                    <td></td><td></td><td></td><td></td>
-                                    <td rowspan="2" class="text-center">{{ $i === 1 ? '' : '0' }}<span @if($i === 1) id="preview-total-hours" @endif></span></td>
-                                    <td rowspan="2" class="text-center"><span @if($i === 1) id="preview-rate" @endif></span></td>
-                                    <td rowspan="2" class="text-end">{{ $i === 1 ? '' : '-' }}<span @if($i === 1) id="preview-line-total" @endif></span></td>
+                                    @for($tutorial = 0; $tutorial < 4; $tutorial++)
+                                        <td>{{ $row['tutorials'][$tutorial]['date'] ?? '' }}</td>
+                                    @endfor
+                                    <td rowspan="2" class="text-center">{{ $row ? number_format((float) $row['total_hours'], 2) : '0' }}</td>
+                                    <td rowspan="2" class="text-center">{{ $row ? number_format((float) $row['rate'], 2) : '' }}</td>
+                                    <td rowspan="2" class="text-end">{{ $row ? 'RM ' . number_format((float) $row['amount'], 2) : '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-center">Hour</td>
-                                    <td></td><td></td><td></td><td></td>
+                                    @for($tutorial = 0; $tutorial < 4; $tutorial++)
+                                        <td>{{ $row['tutorials'][$tutorial]['hours'] ?? '' }}</td>
+                                    @endfor
                                 </tr>
                             @endfor
                             <tr>
                                 <th colspan="10" class="text-end">Total (RM)</th>
-                                <th class="text-end" id="preview-table-total">-</th>
+                                <th class="text-end">RM {{ number_format((float) $videoRecordingTotal, 2) }}</th>
                             </tr>
                         </tbody>
                     </table>
@@ -473,6 +519,29 @@
                             </div>
                         @endforeach
                     </div>
+                    @if(($uploadedSubmissions ?? collect())->isNotEmpty())
+                        <div class="fw-semibold mb-1">Uploaded Submission(s)</div>
+                        <table class="print-claim-table mb-3">
+                            <thead>
+                                <tr>
+                                    <th style="width:36px">No</th>
+                                    <th>Submission</th>
+                                    <th style="width:120px">Type</th>
+                                    <th style="width:95px">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($uploadedSubmissions as $submission)
+                                    <tr>
+                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                        <td>{{ $submission->title }}</td>
+                                        <td>{{ $submission->type_label }}</td>
+                                        <td>{{ $submission->submission_date?->format('d/m/Y') ?? $submission->created_at->format('d/m/Y') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
 
                     <table class="print-claim-table signature-table mb-4">
                         <tbody>
@@ -525,18 +594,53 @@ function selectedAppointment() {
 }
 
 function selectedClaimTypeLabel() {
-    const select = document.getElementById('claim_type');
-    return select.value ? select.options[select.selectedIndex].text : '';
+    return Array.from(document.querySelectorAll('.claim-type'))
+        .map((select) => select.value ? select.options[select.selectedIndex].text : '')
+        .filter(Boolean)
+        .join(', ');
+}
+
+const submissionBaseAmount = {{ (float) ($submissionTotals['amount'] ?? 0) }};
+
+function currentClaimItems() {
+    return Array.from(document.querySelectorAll('.claim-item')).map((item) => {
+        const type = item.querySelector('.claim-type').value;
+        const hours = parseFloat(item.querySelector('.claim-hours')?.value) || 0;
+        const rate = parseFloat(item.querySelector('.claim-rate').value) || 0;
+        const total = type === 'teaching' ? hours * rate : rate;
+        return { item, type, hours, rate, total };
+    });
 }
 
 function currentTotal() {
-    const hours = parseFloat(document.getElementById('total_hours').value) || 0;
-    const rate = parseFloat(document.getElementById('rate_per_hour').value) || 0;
-    return { hours, rate, total: hours * rate };
+    const items = currentClaimItems();
+    const teaching = items.find((item) => item.type === 'teaching') || { hours: 0, rate: 0, total: 0 };
+    const claimTotal = items.reduce((sum, item) => sum + item.total, 0);
+    return { hours: teaching.hours, rate: teaching.rate, total: claimTotal + submissionBaseAmount, claimTotal, items };
 }
 
 function updateTotal() {
+    currentClaimItems().forEach(({ item, type, total }) => {
+        const hoursWrap = item.querySelector('.claim-hours-wrap');
+        const hoursInput = item.querySelector('.claim-hours');
+        const rateLabel = item.querySelector('.rate-label');
+        hoursWrap.classList.toggle('d-none', type !== 'teaching');
+        hoursInput.toggleAttribute('required', type === 'teaching');
+        if (type !== 'teaching') {
+            hoursInput.value = '';
+        }
+        rateLabel.textContent = type === 'teaching' ? 'Rate per Hour (RM)' : 'Rate (RM)';
+        item.querySelector('.claim-line-total').textContent = 'Line total: ' + money(total);
+    });
     document.getElementById('total-display').textContent = money(currentTotal().total);
+}
+
+function reindexClaimItems() {
+    document.querySelectorAll('.claim-item').forEach((item, index) => {
+        item.querySelector('.claim-type').name = `claim_items[${index}][claim_type]`;
+        item.querySelector('.claim-hours').name = `claim_items[${index}][total_hours]`;
+        item.querySelector('.claim-rate').name = `claim_items[${index}][rate]`;
+    });
 }
 
 function syncPrintPreview() {
@@ -551,12 +655,6 @@ function syncPrintPreview() {
         target.textContent = source ? source.value : '';
     });
 
-    document.getElementById('preview-course-code').textContent = appointment?.dataset?.code || '';
-    document.getElementById('preview-course-name').textContent = appointment?.dataset?.name || '';
-    document.getElementById('preview-total-hours').textContent = totals.hours || '0';
-    document.getElementById('preview-rate').textContent = totals.rate ? money(totals.rate).replace('RM ', '') : '';
-    document.getElementById('preview-line-total').textContent = totals.total ? money(totals.total) : '-';
-    document.getElementById('preview-table-total').textContent = totals.total ? money(totals.total) : '-';
     document.getElementById('preview-grand-total').textContent = totals.total ? money(totals.total) : '-';
     document.getElementById('preview-claim-type').textContent = selectedClaimTypeLabel();
 
@@ -577,8 +675,29 @@ function syncPrintPreview() {
     });
 }
 
-document.getElementById('total_hours').addEventListener('input', updateTotal);
-document.getElementById('rate_per_hour').addEventListener('input', updateTotal);
+document.getElementById('add-claim-type').addEventListener('click', function () {
+    const container = document.getElementById('claim-items');
+    const template = container.querySelector('.claim-item').cloneNode(true);
+    template.querySelectorAll('input').forEach((input) => input.value = '');
+    template.querySelector('.claim-type').value = 'marking';
+    container.appendChild(template);
+    reindexClaimItems();
+    updateTotal();
+});
+
+document.getElementById('claim-items').addEventListener('input', updateTotal);
+document.getElementById('claim-items').addEventListener('change', updateTotal);
+document.getElementById('claim-items').addEventListener('click', function (event) {
+    const button = event.target.closest('.remove-claim-type');
+    if (!button) {
+        return;
+    }
+    if (document.querySelectorAll('.claim-item').length > 1) {
+        button.closest('.claim-item').remove();
+        reindexClaimItems();
+        updateTotal();
+    }
+});
 document.getElementById('printPreviewModal').addEventListener('show.bs.modal', syncPrintPreview);
 updateTotal();
 </script>

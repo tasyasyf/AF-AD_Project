@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'profile_id', 'submission_type', 'submission_date', 'title', 'description',
-    'file_path', 'file_original_name', 'file_mime', 'file_size',
+    'file_path', 'file_original_name', 'file_mime', 'file_size', 'video_url',
     'video_duration_minutes', 'tutorial_number',
     'claim_hours', 'rate_per_hour', 'total_amount',
     'semester_intake', 'course', 'course_name', 'programme',
@@ -30,12 +30,14 @@ class Submission extends Model
         self::TYPE_MARK_ENTRY_FORMS => 'Mark-entry Forms',
         self::TYPE_GRADED_SCRIPTS => 'Graded Scripts',
         self::TYPE_QA => 'Question Paper & Answer Sheet',
+        self::TYPE_QUESTION_BANK_ANSWER_SHEET => 'QB-AS',
     ];
 
     public const CLAIM_CHECKLIST_MAP = [
         self::TYPE_MARK_ENTRY_FORMS => 'has_mark_entry_forms',
         self::TYPE_GRADED_SCRIPTS => 'has_graded_scripts',
         self::TYPE_QA => 'has_qa',
+        self::TYPE_QUESTION_BANK_ANSWER_SHEET => 'has_question_bank_answer_sheet',
     ];
 
     protected function casts(): array
@@ -73,6 +75,26 @@ class Submission extends Model
     public function isVideoRecording(): bool
     {
         return $this->submission_type === self::TYPE_VIDEO_RECORDING;
+    }
+
+    public function getVideoLinkAttribute(): ?string
+    {
+        if (!$this->isVideoRecording()) {
+            return null;
+        }
+
+        foreach ([$this->video_url, $this->file_path] as $url) {
+            if (is_string($url) && filter_var($url, FILTER_VALIDATE_URL)) {
+                return $url;
+            }
+        }
+
+        return null;
+    }
+
+    public function hasVideoLink(): bool
+    {
+        return (bool) $this->video_link;
     }
 
     public function isQuestionBankAnswerSheet(): bool

@@ -48,7 +48,7 @@
                     </div>
                     <div class="col-md-6 video-only d-none">
                         <label class="form-label fw-semibold">Duration Seconds <span class="text-danger">*</span></label>
-                        <input type="number" name="video_duration_seconds" id="video-duration-seconds" class="form-control @error('video_duration_seconds') is-invalid @enderror" value="{{ old('video_duration_seconds', $submission?->video_duration_minutes ? (int) round($submission->video_duration_minutes * 60) : '') }}" min="1">
+                        <input type="number" name="video_duration_seconds" id="video-duration-seconds" class="form-control @error('video_duration_seconds') is-invalid @enderror" value="{{ old('video_duration_seconds', $submission?->video_duration_minutes ? (int) round($submission->video_duration_minutes * 60) : '') }}" min="0">
                         @error('video_duration_seconds') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4 question-bank-only d-none">

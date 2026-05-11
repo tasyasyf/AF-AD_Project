@@ -20,10 +20,25 @@
                                 {{ $field['label'] }}
                                 @if($field['required'] ?? false) <span class="text-danger">*</span> @endif
                             </label>
-                            <textarea class="form-control" id="{{ $id }}_{{ $field['name'] }}"
-                                name="{{ $field['name'] }}" rows="3"
-                                @if($field['required'] ?? false) required @endif
-                                placeholder="{{ $field['placeholder'] ?? '' }}"></textarea>
+                            @if(($field['type'] ?? null) === 'checkboxes')
+                                <div class="border rounded p-2">
+                                    @foreach($field['options'] ?? [] as $value => $label)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                name="{{ $field['name'] }}[]" value="{{ $value }}"
+                                                id="{{ $id }}_{{ $field['name'] }}_{{ $value }}">
+                                            <label class="form-check-label" for="{{ $id }}_{{ $field['name'] }}_{{ $value }}">
+                                                {{ $label }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <textarea class="form-control" id="{{ $id }}_{{ $field['name'] }}"
+                                    name="{{ $field['name'] }}" rows="3"
+                                    @if($field['required'] ?? false) required @endif
+                                    placeholder="{{ $field['placeholder'] ?? '' }}"></textarea>
+                            @endif
                         </div>
                     @endforeach
                 </div>

@@ -2,8 +2,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5 class="fw-bold mb-0">AF/AD Profiles</h5>
-    <a href="{{ route('admin.profiles.create') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-person-plus me-1"></i> New Profile
+    <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-person-plus me-1"></i> New User
     </a>
 </div>
 

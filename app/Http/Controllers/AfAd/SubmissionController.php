@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AfAd;
 use App\Http\Controllers\Controller;
 use App\Models\Submission;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -44,53 +45,48 @@ class SubmissionController extends Controller
             'title'       => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'tutorial_number' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'integer', 'between:1,5'],
-            'video_duration_seconds' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'numeric', 'min:1', 'max:86400'],
-            'claim_hours' => ['nullable', 'numeric', 'min:0.01', 'max:9999'],
-            'rate_per_hour' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_VIDEO_RECORDING, 'numeric', 'min:0', 'max:999999'],
+            'video_url' => ['nullable', 'url', 'max:500'],
+            'video_duration_seconds' => ['nullable', 'numeric', 'min:0', 'max:86400'],
+            'claim_hours' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'rate_per_hour' => ['required', 'numeric', 'min:0', 'max:999999'],
             'semester_intake' => ['nullable', 'required_if:submission_type,' . Submission::TYPE_QUESTION_BANK_ANSWER_SHEET, 'string', 'in:January,May,September'],
             'course' => ['required', 'string', 'in:CRM300,CSC400,CIT400'],
             'course_name' => ['required', 'string', 'in:Industrial Training,Customer Relationship Management,Software Construction'],
             'programme' => ['required', 'string', 'in:BBA,BICT,BDCM'],
-            'file'        => ['required', 'file'],
+            'file'        => ['nullable', 'file'],
         ]);
 
         $isVideoRecording = $data['submission_type'] === Submission::TYPE_VIDEO_RECORDING;
         $isQuestionBankAnswerSheet = $data['submission_type'] === Submission::TYPE_QUESTION_BANK_ANSWER_SHEET;
 
-        $request->validate([
-            'file' => $isVideoRecording
-                ? ['mimetypes:video/mp4,video/quicktime,video/webm,video/x-matroska,video/x-msvideo,video/x-ms-wmv', 'max:512000']
-                : ['mimes:pdf', 'max:5120'],
-        ], [
-            'file.mimetypes' => 'Video recording submissions must be uploaded as a video file.',
-            'file.mimes' => 'This submission type must be uploaded as a PDF file.',
-            'file.max' => $isVideoRecording
-                ? 'Video recording submissions must not exceed 500MB.'
-                : 'PDF submissions must not exceed 5MB.',
-        ]);
-
-        $videoDurationMinutes = $isVideoRecording
-            ? round(((float) $data['video_duration_seconds']) / 60, 2)
-            : null;
-        $claimHours = $isVideoRecording
-            ? round(((float) $data['video_duration_seconds']) / 3600, 2)
-            : null;
-        $submissionRate = $isVideoRecording ? (float) $data['rate_per_hour'] : null;
-        $submissionTotalAmount = $isVideoRecording ? round($claimHours * $submissionRate, 2) : null;
-
-        $request->validate([
-            'video_duration_seconds' => $isVideoRecording && $videoDurationMinutes <= 0
-                ? ['prohibited']
-                : ['nullable'],
-        ], [
-            'video_duration_seconds.prohibited' => 'The video duration could not be calculated. Please choose the video again.',
-        ]);
-
-        if ($isVideoRecording && $videoDurationMinutes <= 0) {
-            return back()
-                ->withErrors(['file' => 'The video duration could not be calculated. Please choose the video again.'])
-                ->withInput();
+        if ($isVideoRecording) {
+            $request->validate([
+                'video_url' => ['required', 'url', 'max:500'],
+            ], [
+                'video_url.required' => 'Please paste the video recording link.',
+                'video_url.url' => 'Please enter a valid video recording link.',
+            ]);
+        } else {
+            $request->validate([
+                'file' => ['required', 'mimes:pdf', 'max:5120'],
+            ], [
+                'file.required' => 'Please upload the required PDF file.',
+                'file.mimes' => 'This submission type must be uploaded as a PDF file.',
+                'file.max' => 'PDF submissions must not exceed 5MB.',
+            ]);
         }
+
+        $videoDurationSeconds = (float) ($data['video_duration_seconds'] ?? 0);
+        $videoDurationMinutes = $isVideoRecording && $videoDurationSeconds > 0
+            ? round($videoDurationSeconds / 60, 2)
+            : null;
+        $claimHours = $isVideoRecording && $videoDurationSeconds > 0
+            ? round($videoDurationSeconds / 3600, 2)
+            : null;
+        $submissionRate = (float) $data['rate_per_hour'];
+        $submissionTotalAmount = $isVideoRecording
+            ? ($claimHours !== null ? round($claimHours * $submissionRate, 2) : null)
+            : round($submissionRate, 2);
 
         if (!$isVideoRecording) {
             $data['tutorial_number'] = null;
@@ -101,18 +97,19 @@ class SubmissionController extends Controller
         }
 
         $file = $request->file('file');
-        $path = $file->store('submissions', 'local');
+        $path = $isVideoRecording ? $data['video_url'] : $file->store('submissions', 'local');
 
-        Submission::create([
+        $submission = Submission::create([
             'profile_id'         => $profile->id,
             'submission_type'    => $data['submission_type'],
             'submission_date'    => $data['submission_date'],
             'title'              => $data['title'],
             'description'        => $data['description'] ?? null,
             'file_path'          => $path,
-            'file_original_name' => $file->getClientOriginalName(),
-            'file_mime'          => $file->getMimeType(),
-            'file_size'          => $file->getSize(),
+            'file_original_name' => $isVideoRecording ? 'Video recording link' : $file->getClientOriginalName(),
+            'file_mime'          => $isVideoRecording ? 'text/uri-list' : $file->getMimeType(),
+            'file_size'          => $isVideoRecording ? 0 : $file->getSize(),
+            'video_url'          => $isVideoRecording ? $data['video_url'] : null,
             'video_duration_minutes' => $videoDurationMinutes,
             'tutorial_number'    => $data['tutorial_number'] ?? null,
             'claim_hours'        => $claimHours,
@@ -124,8 +121,40 @@ class SubmissionController extends Controller
             'programme'          => $data['programme'] ?? null,
         ]);
 
-        return redirect()->route('afad.submissions.index')
+        return redirect()->route($isVideoRecording ? 'afad.submissions.show' : 'afad.submissions.index', $isVideoRecording ? $submission : [])
             ->with('success', 'Submission uploaded successfully.');
+    }
+
+    public function updateVideoDuration(Request $request, Submission $submission): JsonResponse
+    {
+        abort_if($submission->profile->user_id !== auth()->id(), 403);
+        abort_if(!$submission->isVideoRecording(), 404);
+
+        $data = $request->validate([
+            'video_duration_seconds' => ['required', 'numeric', 'min:1', 'max:86400'],
+        ]);
+
+        $durationSeconds = (float) $data['video_duration_seconds'];
+        $durationMinutes = round($durationSeconds / 60, 2);
+        $claimHours = round($durationSeconds / 3600, 2);
+        $totalAmount = $submission->rate_per_hour !== null
+            ? round($claimHours * (float) $submission->rate_per_hour, 2)
+            : null;
+
+        $submission->update([
+            'video_duration_minutes' => $durationMinutes,
+            'claim_hours' => $claimHours,
+            'total_amount' => $totalAmount,
+        ]);
+
+        return response()->json([
+            'video_duration_minutes' => $durationMinutes,
+            'claim_hours' => $claimHours,
+            'total_amount' => $totalAmount,
+            'formatted_duration' => number_format($durationMinutes, 2) . ' minutes',
+            'formatted_claim_hours' => number_format($claimHours, 2),
+            'formatted_total_amount' => $totalAmount !== null ? 'RM ' . number_format($totalAmount, 2) : '—',
+        ]);
     }
 
     public function show(Submission $submission): View
@@ -138,6 +167,7 @@ class SubmissionController extends Controller
     public function download(Submission $submission): StreamedResponse
     {
         abort_if($submission->profile->user_id !== auth()->id(), 403);
+        abort_if($submission->hasVideoLink(), 404);
         abort_if(!Storage::disk('local')->exists($submission->file_path), 404);
 
         return Storage::disk('local')->download($submission->file_path, $submission->file_original_name);
@@ -148,7 +178,7 @@ class SubmissionController extends Controller
         abort_if($submission->profile->user_id !== auth()->id(), 403);
         abort_if($submission->status === 'reviewed', 403, 'Reviewed submissions cannot be deleted.');
 
-        if ($submission->file_path) {
+        if (!$submission->isVideoRecording() && $submission->file_path) {
             Storage::disk('local')->delete($submission->file_path);
         }
         $submission->delete();
