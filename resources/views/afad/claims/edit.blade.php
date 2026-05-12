@@ -169,7 +169,6 @@
                         </div>
                         @foreach([
                             'has_mark_entry_forms' => 'Mark-entry Forms',
-                            'has_graded_scripts' => 'Graded Scripts',
                             'has_qa' => 'Question Paper & Answer Sheet',
                             'has_question_bank_answer_sheet' => 'QB-AS',
                         ] as $field => $label)

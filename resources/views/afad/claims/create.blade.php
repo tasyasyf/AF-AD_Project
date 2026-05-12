@@ -304,7 +304,6 @@
                         </div>
                         @foreach([
                             'has_mark_entry_forms' => 'Mark-entry Forms',
-                            'has_graded_scripts' => 'Graded Scripts',
                             'has_qa' => 'Question Paper & Answer Sheet',
                             'has_question_bank_answer_sheet' => 'QB-AS',
                         ] as $field => $label)
@@ -532,7 +531,6 @@
                             'has_recording_link' => 'Recording Link',
                             'has_attendance_sheet' => 'Attendance Sheet',
                             'has_mark_entry_forms' => 'Mark-entry Forms',
-                            'has_graded_scripts' => 'Graded Scripts',
                             'has_qa' => 'Question Paper & Answer Sheet',
                         ] as $field => $label)
                             <div class="col-md-6">
@@ -667,7 +665,6 @@ function syncPrintPreview() {
         'has_recording_link',
         'has_attendance_sheet',
         'has_mark_entry_forms',
-        'has_graded_scripts',
         'has_qa',
     ].forEach((id) => {
         const target = document.getElementById('preview-' + id.replaceAll('_', '-'));

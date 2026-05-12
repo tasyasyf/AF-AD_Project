@@ -23,7 +23,6 @@ class Submission extends Model
     public const TYPE_VIDEO_RECORDING = 'video_recording';
     public const TYPE_ATTENDANCE_SHEET = 'attendance_sheet';
     public const TYPE_MARK_ENTRY_FORMS = 'mark_entry_forms';
-    public const TYPE_GRADED_SCRIPTS = 'graded_scripts';
     public const TYPE_QA = 'qa';
     public const TYPE_QUESTION_BANK_ANSWER_SHEET = 'question_bank_answer_sheet';
 
@@ -31,14 +30,12 @@ class Submission extends Model
         self::TYPE_VIDEO_RECORDING => 'Video Recording Submission',
         self::TYPE_ATTENDANCE_SHEET => 'Attendance Sheet',
         self::TYPE_MARK_ENTRY_FORMS => 'Mark-entry Forms',
-        self::TYPE_GRADED_SCRIPTS => 'Graded Scripts',
         self::TYPE_QA => 'Question Paper & Answer Sheet',
         self::TYPE_QUESTION_BANK_ANSWER_SHEET => 'QB-AS',
     ];
 
     public const CLAIM_CHECKLIST_MAP = [
         self::TYPE_MARK_ENTRY_FORMS => 'has_mark_entry_forms',
-        self::TYPE_GRADED_SCRIPTS => 'has_graded_scripts',
         self::TYPE_QA => 'has_qa',
         self::TYPE_QUESTION_BANK_ANSWER_SHEET => 'has_question_bank_answer_sheet',
     ];

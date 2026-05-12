@@ -63,7 +63,6 @@ class ClaimController extends Controller
             'status'         => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],
             'executive_remarks' => ['nullable', 'string'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
-            'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 
@@ -84,7 +83,6 @@ class ClaimController extends Controller
             'reviewed_at' => in_array($data['status'], ['approved', 'returned', 'rejected'], true) ? now() : null,
             'executive_remarks' => $data['executive_remarks'] ?? null,
             'has_mark_entry_forms' => $request->boolean('has_mark_entry_forms'),
-            'has_graded_scripts' => $request->boolean('has_graded_scripts'),
             'has_qa' => $request->boolean('has_qa'),
         ]);
 
@@ -103,7 +101,6 @@ class ClaimController extends Controller
             'status'             => ['required', 'in:draft,submitted,under_review,approved,returned,rejected'],
             'executive_remarks'  => ['nullable', 'string'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
-            'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 
@@ -111,7 +108,6 @@ class ClaimController extends Controller
         $data['period_to'] = $claim->appointment->end_date;
         $data['total_amount'] = $data['total_hours'] * $data['rate_per_hour'];
         $data['has_mark_entry_forms'] = $request->boolean('has_mark_entry_forms');
-        $data['has_graded_scripts'] = $request->boolean('has_graded_scripts');
         $data['has_qa'] = $request->boolean('has_qa');
 
         $claim->update($data);

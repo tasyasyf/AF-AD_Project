@@ -80,7 +80,6 @@ class ClaimController extends Controller
             'semester_intake.*' => ['string', 'in:jan,may,sept'],
             'action' => ['nullable', 'in:draft,submit'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
-            'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 
@@ -179,7 +178,6 @@ class ClaimController extends Controller
             'semester_intake' => ['nullable', 'array'],
             'semester_intake.*' => ['string', 'in:jan,may,sept'],
             'has_mark_entry_forms' => ['nullable', 'boolean'],
-            'has_graded_scripts' => ['nullable', 'boolean'],
             'has_qa' => ['nullable', 'boolean'],
         ]);
 

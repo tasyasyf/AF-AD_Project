@@ -66,7 +66,6 @@
                         <div class="row g-2">
                             @foreach([
                                 'has_mark_entry_forms' => 'Mark-entry Forms',
-                                'has_graded_scripts' => 'Graded Scripts',
                                 'has_qa' => 'Question Paper & Answer Sheet',
                             ] as $field => $label)
                                 <div class="col-md-6">
