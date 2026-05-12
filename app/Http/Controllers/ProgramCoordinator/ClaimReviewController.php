@@ -13,8 +13,10 @@ class ClaimReviewController extends Controller
 {
     public function index(Request $request): View
     {
+        $visibleStatuses = ['submitted', 'under_review', 'approved', 'returned', 'rejected'];
+
         $query = Claim::with(['profile.user', 'appointment', 'pcEndorser'])
-            ->whereIn('status', ['approved', 'returned', 'rejected'])
+            ->whereIn('status', $visibleStatuses)
             ->latest('reviewed_at')
             ->latest('submitted_at');
 
@@ -32,16 +34,45 @@ class ClaimReviewController extends Controller
 
         $claims = $query->paginate(15)->withQueryString();
 
-        return view('program-coordinator.claims.index', compact('claims'));
+        return view('program-coordinator.claims.index', compact('claims', 'visibleStatuses'));
     }
 
     public function show(Claim $claim): View
     {
-        abort_if(!in_array($claim->status, ['approved', 'returned', 'rejected']), 404);
+        abort_if(!in_array($claim->status, ['submitted', 'under_review', 'approved', 'returned', 'rejected']), 404);
 
-        $claim->load(['profile.user', 'appointment', 'documents', 'audits.performer', 'reviewer', 'pcEndorser']);
+        $claim->load(['profile.user', 'appointment', 'audits.performer', 'reviewer', 'pcEndorser']);
 
-        return view('program-coordinator.claims.show', compact('claim'));
+        $uploadedSubmissions = $claim->submissions()
+            ->latest()
+            ->get([
+                'id',
+                'claim_id',
+                'submission_type',
+                'title',
+                'course',
+                'course_name',
+                'tutorial_number',
+                'status',
+            ]);
+
+        if ($uploadedSubmissions->isEmpty()) {
+            $uploadedSubmissions = $claim->profile->submissions()
+                ->where('course', $claim->appointment->course_code)
+                ->latest()
+                ->get([
+                    'id',
+                    'claim_id',
+                    'submission_type',
+                    'title',
+                    'course',
+                    'course_name',
+                    'tutorial_number',
+                    'status',
+                ]);
+        }
+
+        return view('program-coordinator.claims.show', compact('claim', 'uploadedSubmissions'));
     }
 
     public function endorse(Request $request, Claim $claim): RedirectResponse

@@ -120,6 +120,9 @@ Route::prefix('pc')->name('pc.')->middleware(['auth', 'role:pc'])->group(functio
     Route::post('/appointments', [ProgramCoordinator\AppointmentController::class, 'store'])->name('appointments.store');
     Route::get('/nomination', [ProgramCoordinator\NominationController::class, 'index'])->name('nomination.index');
     Route::get('/document-checklist', [ProgramCoordinator\DocumentChecklistController::class, 'index'])->name('document-checklist.index');
+    Route::get('/document-checklist/submissions/{submission}/view', [ProgramCoordinator\DocumentChecklistController::class, 'viewSubmission'])->name('document-checklist.submissions.view');
+    Route::post('/document-checklist/qbas/{submission}/confirm', [ProgramCoordinator\DocumentChecklistController::class, 'confirmQbAs'])->name('document-checklist.qbas.confirm');
+    Route::post('/document-checklist/qbas/{submission}/reject', [ProgramCoordinator\DocumentChecklistController::class, 'rejectQbAs'])->name('document-checklist.qbas.reject');
     Route::get('/claims', [ProgramCoordinator\ClaimReviewController::class, 'index'])->name('claims.index');
     Route::get('/claims/{claim}', [ProgramCoordinator\ClaimReviewController::class, 'show'])->name('claims.show');
     Route::post('/claims/{claim}/endorse', [ProgramCoordinator\ClaimReviewController::class, 'endorse'])->name('claims.endorse');

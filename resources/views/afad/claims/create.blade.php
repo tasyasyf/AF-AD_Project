@@ -4,6 +4,10 @@
     $videoRecordingRows = $videoRecordingRows ?? [];
     $printRows = array_slice(array_pad($videoRecordingRows, 4, null), 0, 4);
     $videoRecordingTotal = collect($videoRecordingRows)->sum('amount');
+    $additionalSubmissionRows = ($uploadedSubmissions ?? collect())
+        ->reject(fn($submission) => $submission->isVideoRecording())
+        ->values();
+    $additionalSubmissionTotal = $additionalSubmissionRows->sum(fn($submission) => (float) ($submission->total_amount ?? 0));
 @endphp
 
 <style>
@@ -487,16 +491,32 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @for($i = 1; $i <= 3; $i++)
+                            @forelse($additionalSubmissionRows as $submission)
                                 <tr>
-                                    <td class="text-center">{{ $i }}</td>
-                                    <td>{{ $i === 1 ? 'Claim type: ' : '' }}<span @if($i === 1) id="preview-claim-type" @endif></span></td>
+                                    <td class="text-center">{{ $loop->iteration }}</td>
+                                    <td>
+                                        {{ $submission->type_label }}
+                                        @if($submission->course)
+                                            - {{ $submission->course }}
+                                        @endif
+                                        @if($submission->course_name)
+                                            / {{ $submission->course_name }}
+                                        @endif
+                                    </td>
+                                    <td></td>
+                                    <td>{{ $submission->rate_per_hour ? number_format((float) $submission->rate_per_hour, 2) : '-' }}</td>
+                                    <td class="text-end">{{ $submission->total_amount ? 'RM ' . number_format((float) $submission->total_amount, 2) : '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td class="text-center">1</td>
+                                    <td><span id="preview-claim-type"></span></td>
                                     <td></td>
                                     <td></td>
                                     <td class="text-end">-</td>
                                 </tr>
-                            @endfor
-                            <tr><th colspan="4" class="text-end">Total (RM)</th><th class="text-end">-</th></tr>
+                            @endforelse
+                            <tr><th colspan="4" class="text-end">Total (RM)</th><th class="text-end">RM {{ number_format((float) $additionalSubmissionTotal, 2) }}</th></tr>
                             <tr><th colspan="4" class="text-end fs-6">Grand Total (RM)</th><th class="text-end fs-6" id="preview-grand-total">-</th></tr>
                         </tbody>
                     </table>
@@ -521,30 +541,6 @@
                             </div>
                         @endforeach
                     </div>
-                    @if(($uploadedSubmissions ?? collect())->isNotEmpty())
-                        <div class="fw-semibold mb-1">Uploaded Submission(s)</div>
-                        <table class="print-claim-table mb-3">
-                            <thead>
-                                <tr>
-                                    <th style="width:36px">No</th>
-                                    <th>Submission</th>
-                                    <th style="width:120px">Type</th>
-                                    <th style="width:95px">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($uploadedSubmissions as $submission)
-                                    <tr>
-                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td>{{ $submission->title }}</td>
-                                        <td>{{ $submission->type_label }}</td>
-                                        <td>{{ $submission->submission_date?->format('d/m/Y') ?? $submission->created_at->format('d/m/Y') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
-
                     <table class="print-claim-table signature-table mb-4">
                         <tbody>
                             <tr>
@@ -658,7 +654,10 @@ function syncPrintPreview() {
     });
 
     document.getElementById('preview-grand-total').textContent = totals.total ? money(totals.total) : '-';
-    document.getElementById('preview-claim-type').textContent = selectedClaimTypeLabel();
+    const claimTypePreview = document.getElementById('preview-claim-type');
+    if (claimTypePreview) {
+        claimTypePreview.textContent = selectedClaimTypeLabel();
+    }
 
     document.getElementById('preview-sem-jan').textContent = intakeChecked('jan') || semester.includes('jan') ? '✓' : '';
     document.getElementById('preview-sem-may').textContent = intakeChecked('may') || semester.includes('may') ? '✓' : '';

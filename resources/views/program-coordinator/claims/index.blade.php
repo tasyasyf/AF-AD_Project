@@ -3,7 +3,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h5 class="fw-bold mb-1">Claim Endorsement</h5>
-        <div class="text-muted small">Endorse Executive-approved claims and track manual Finance submission readiness.</div>
+        <div class="text-muted small">Monitor all submitted AF/AD claim forms and endorse Executive-approved claims.</div>
     </div>
 </div>
 
@@ -14,7 +14,7 @@
                 placeholder="Reference / AF/AD..." value="{{ request('search') }}">
             <select name="status" class="form-select form-select-sm" style="max-width:180px">
                 <option value="">All Statuses</option>
-                @foreach(['approved','returned','rejected'] as $status)
+                @foreach($visibleStatuses as $status)
                     <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
                 @endforeach
             </select>

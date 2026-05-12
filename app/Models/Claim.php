@@ -82,6 +82,11 @@ class Claim extends Model
         return $this->hasMany(ClaimAudit::class)->orderBy('created_at', 'desc');
     }
 
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
     public function displayClaimItems(): array
     {
         if (is_array($this->claim_items) && count($this->claim_items) > 0) {

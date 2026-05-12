@@ -50,6 +50,12 @@
     </div>
 </div>
 
-@include('afad.claims.partials.uploaded-submissions', ['uploadedSubmissions' => $uploadedSubmissions])
+@include('afad.claims.partials.uploaded-submissions', [
+    'uploadedSubmissions' => $uploadedSubmissions,
+    'showSubmissionFilters' => true,
+    'submissionFilters' => $submissionFilters,
+    'submissionCourses' => $submissionCourses,
+    'submissionTypes' => $submissionTypes,
+])
 
 </x-layouts.app>

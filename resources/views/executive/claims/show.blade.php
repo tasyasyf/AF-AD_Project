@@ -66,30 +66,20 @@
                 <hr>
                 <div class="text-muted small fw-semibold mb-2">Submission Checklist</div>
                 <div class="row g-2">
-                    @foreach([
-                        'has_mark_entry_forms' => 'Mark-entry Forms',
-                        'has_graded_scripts' => 'Graded Scripts',
-                        'has_qa' => 'Question Paper & Answer Sheet',
-                    ] as $field => $label)
+                    @forelse($uploadedSubmissions as $submission)
                         <div class="col-md-6">
-                            <span class="badge bg-{{ $claim->{$field} ? 'success' : 'secondary' }}">
-                                <i class="bi bi-{{ $claim->{$field} ? 'check2' : 'dash' }} me-1"></i>{{ $label }}
+                            <span class="badge bg-success text-wrap text-start">
+                                <i class="bi bi-check2 me-1"></i>{{ $submission->type_label }} - {{ $submission->title }}
                             </span>
                         </div>
-                    @endforeach
+                    @empty
+                        <div class="col-12">
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-dash me-1"></i>No submissions uploaded yet
+                            </span>
+                        </div>
+                    @endforelse
                 </div>
-            </div>
-        </div>
-
-        <!-- Supporting Documents -->
-        <div class="card mb-4">
-            <div class="card-header bg-white fw-semibold">Supporting Documents</div>
-            <div class="card-body">
-                @forelse($claim->documents as $doc)
-                    <x-document-row :document="$doc" :claim="$claim" :editable="false" />
-                @empty
-                    <p class="text-muted small mb-0">No documents.</p>
-                @endforelse
             </div>
         </div>
     </div>

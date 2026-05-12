@@ -22,9 +22,9 @@ class DashboardController extends Controller
         ];
 
         $pending_profiles = Profile::pending()->with('user')->latest()->take(5)->get();
-        $pending_claims   = Claim::whereIn('status', ['submitted', 'under_review'])
+        $pending_claims   = Claim::whereIn('status', ['submitted', 'under_review', 'approved', 'returned', 'rejected'])
             ->with(['profile.user', 'appointment'])
-            ->latest('submitted_at')
+            ->latest()
             ->take(5)
             ->get();
 

@@ -32,7 +32,24 @@ class ClaimReviewController extends Controller
     public function show(Claim $claim): View
     {
         $claim->load(['profile.user', 'appointment', 'documents', 'audits.performer', 'reviewer']);
-        return view('executive.claims.show', compact('claim'));
+        $uploadedSubmissions = $claim->submissions()
+            ->latest()
+            ->get([
+                'id',
+                'submission_type',
+                'title',
+                'course',
+                'course_name',
+                'tutorial_number',
+                'submission_date',
+                'claim_hours',
+                'rate_per_hour',
+                'total_amount',
+                'status',
+                'created_at',
+            ]);
+
+        return view('executive.claims.show', compact('claim', 'uploadedSubmissions'));
     }
 
     public function approve(Request $request, Claim $claim): RedirectResponse

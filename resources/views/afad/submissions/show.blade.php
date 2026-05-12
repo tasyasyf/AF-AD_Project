@@ -58,6 +58,23 @@
                     @if($submission->isQuestionBankAnswerSheet())
                         <dt class="col-sm-3 text-muted">Semester Intake</dt>
                         <dd class="col-sm-9">{{ $submission->semester_intake ?? '—' }}</dd>
+                        <dt class="col-sm-3 text-muted">PC QB-AS Check</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge {{ $submission->pc_qbas_status_badge_class }}">
+                                {{ $submission->pc_qbas_status_label }}
+                            </span>
+                            @if($submission->pc_qbas_set_count)
+                                <span class="text-muted small ms-2">{{ $submission->pc_qbas_set_count }} set recorded</span>
+                            @endif
+                            @if($submission->pc_qbas_checked_at)
+                                <div class="text-muted small mt-1">
+                                    Checked on {{ $submission->pc_qbas_checked_at->format('d M Y H:i') }}
+                                </div>
+                            @endif
+                            @if($submission->pc_qbas_remarks)
+                                <div class="small mt-1">{{ $submission->pc_qbas_remarks }}</div>
+                            @endif
+                        </dd>
                     @endif
                     <dt class="col-sm-3 text-muted">Description</dt>
                     <dd class="col-sm-9">{{ $submission->description ?? '—' }}</dd>

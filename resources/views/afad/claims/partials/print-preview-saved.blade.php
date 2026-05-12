@@ -5,7 +5,10 @@
     $videoRecordingRows = $videoRecordingRows ?? [];
     $printRows = array_slice(array_pad($videoRecordingRows, 4, null), 0, 4);
     $videoRecordingTotal = collect($videoRecordingRows)->sum('amount');
-    $otherClaimItems = collect($claim->displayClaimItems())->reject(fn($item) => ($item['claim_type'] ?? null) === 'teaching')->values();
+    $additionalSubmissionRows = $uploadedSubmissions
+        ->reject(fn($submission) => $submission->isVideoRecording())
+        ->values();
+    $additionalSubmissionTotal = $additionalSubmissionRows->sum(fn($submission) => (float) ($submission->total_amount ?? 0));
 @endphp
 
 <style>
@@ -137,51 +140,35 @@
                     <table class="print-claim-table mb-3">
                         <thead><tr><th style="width:42px">No</th><th>Payment Details</th><th style="width:150px">No of Assignments</th><th style="width:90px">Rate</th><th style="width:90px">RM</th></tr></thead>
                         <tbody>
-                            @for($i = 1; $i <= 3; $i++)
-                                @php($item = $otherClaimItems[$i - 1] ?? null)
+                            @forelse($additionalSubmissionRows as $submission)
                                 <tr>
-                                    <td class="text-center">{{ $i }}</td>
-                                    <td>{{ $item ? ucfirst(str_replace('_', ' ', $item['claim_type'])) : '' }}</td>
+                                    <td class="text-center">{{ $loop->iteration }}</td>
+                                    <td>
+                                        {{ $submission->type_label }}
+                                        @if($submission->course)
+                                            - {{ $submission->course }}
+                                        @endif
+                                        @if($submission->course_name)
+                                            / {{ $submission->course_name }}
+                                        @endif
+                                    </td>
                                     <td></td>
-                                    <td>{{ $item ? number_format((float) ($item['rate'] ?? 0), 2) : '' }}</td>
-                                    <td class="text-end">{{ $item ? 'RM ' . number_format((float) ($item['amount'] ?? 0), 2) : '-' }}</td>
+                                    <td>{{ $submission->rate_per_hour ? number_format((float) $submission->rate_per_hour, 2) : '-' }}</td>
+                                    <td class="text-end">{{ $submission->total_amount ? 'RM ' . number_format((float) $submission->total_amount, 2) : '-' }}</td>
                                 </tr>
-                            @endfor
+                            @empty
+                                <tr>
+                                    <td class="text-center">1</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="text-end">-</td>
+                                </tr>
+                            @endforelse
+                            <tr><th colspan="4" class="text-end">Total (RM)</th><th class="text-end">RM {{ number_format((float) $additionalSubmissionTotal, 2) }}</th></tr>
                             <tr><th colspan="4" class="text-end fs-6">Grand Total (RM)</th><th class="text-end fs-6">RM {{ number_format($claim->total_amount, 2) }}</th></tr>
                         </tbody>
                     </table>
-
-                    @if($uploadedSubmissions->isNotEmpty())
-                        <div class="fw-semibold mb-1">Uploaded Submissions</div>
-                        <table class="print-claim-table mb-3">
-                            <thead>
-                                <tr>
-                                    <th style="width:36px">No</th>
-                                    <th>Title</th>
-                                    <th style="width:150px">Type</th>
-                                    <th style="width:120px">Course</th>
-                                    <th style="width:80px">Hours</th>
-                                    <th style="width:80px">Rate</th>
-                                    <th style="width:90px">Amount</th>
-                                    <th style="width:90px">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($uploadedSubmissions as $submission)
-                                    <tr>
-                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                        <td>{{ $submission->title }}</td>
-                                        <td>{{ $submission->type_label }}</td>
-                                        <td>{{ $submission->course ?? '-' }}</td>
-                                        <td class="text-center">{{ $submission->claim_hours ? number_format((float) $submission->claim_hours, 2) : '-' }}</td>
-                                        <td class="text-center">{{ $submission->rate_per_hour ? number_format((float) $submission->rate_per_hour, 2) : '-' }}</td>
-                                        <td class="text-end">{{ $submission->total_amount ? 'RM ' . number_format((float) $submission->total_amount, 2) : '-' }}</td>
-                                        <td>{{ $submission->submission_date?->format('d/m/Y') ?? $submission->created_at?->format('d/m/Y') ?? '-' }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
 
                     <div class="fw-semibold text-decoration-underline mb-2">Bank Details</div>
                     <div class="print-line-field"><span>Account Holder Name</span><span class="print-line">{{ $claim->profile->bank_account_holder }}</span></div>

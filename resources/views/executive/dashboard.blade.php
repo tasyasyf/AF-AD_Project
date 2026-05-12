@@ -52,8 +52,8 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <span class="fw-semibold">Claims Awaiting Review</span>
-                <a href="{{ route('executive.claims.index', ['status'=>'submitted']) }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <span class="fw-semibold">Recent Claims</span>
+                <a href="{{ route('executive.claims.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
             <div class="card-body p-0">
                 @forelse($pending_claims as $claim)
@@ -70,7 +70,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center text-muted py-4 small">No claims awaiting review.</div>
+                    <div class="text-center text-muted py-4 small">No claims yet.</div>
                 @endforelse
             </div>
         </div>

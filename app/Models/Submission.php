@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'profile_id', 'submission_type', 'submission_date', 'title', 'description',
+    'profile_id', 'claim_id', 'submission_type', 'submission_date', 'title', 'description',
     'file_path', 'file_original_name', 'file_mime', 'file_size', 'video_url',
     'video_duration_minutes', 'tutorial_number',
     'claim_hours', 'rate_per_hour', 'total_amount',
     'semester_intake', 'course', 'course_name', 'programme',
     'status', 'reviewed_by', 'reviewed_at', 'executive_remarks',
+    'pc_qbas_status', 'pc_qbas_set_count', 'pc_qbas_checked_by', 'pc_qbas_checked_at', 'pc_qbas_remarks',
 ])]
 class Submission extends Model
 {
@@ -51,6 +52,7 @@ class Submission extends Model
             'rate_per_hour' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'reviewed_at' => 'datetime',
+            'pc_qbas_checked_at' => 'datetime',
         ];
     }
 
@@ -59,9 +61,19 @@ class Submission extends Model
         return $this->belongsTo(Profile::class);
     }
 
+    public function claim(): BelongsTo
+    {
+        return $this->belongsTo(Claim::class);
+    }
+
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function pcQbasChecker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pc_qbas_checked_by');
     }
 
     public function getTypeLabelAttribute(): string
@@ -107,6 +119,24 @@ class Submission extends Model
     public function isQuestionBankAnswerSheet(): bool
     {
         return $this->submission_type === self::TYPE_QUESTION_BANK_ANSWER_SHEET;
+    }
+
+    public function getPcQbasStatusLabelAttribute(): string
+    {
+        return match ($this->pc_qbas_status) {
+            'confirmed' => 'PC Confirmed',
+            'rejected' => 'PC Rejected',
+            default => 'Check on Pending',
+        };
+    }
+
+    public function getPcQbasStatusBadgeClassAttribute(): string
+    {
+        return match ($this->pc_qbas_status) {
+            'confirmed' => 'bg-success',
+            'rejected' => 'bg-danger',
+            default => 'bg-warning text-dark',
+        };
     }
 
     public function isMarkEntryForms(): bool

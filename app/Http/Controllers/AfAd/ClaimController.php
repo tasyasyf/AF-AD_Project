@@ -13,15 +13,30 @@ use Illuminate\View\View;
 
 class ClaimController extends Controller
 {
-    public function index(): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
         $profile = auth()->user()->profile;
         if (!$profile) {
             return redirect()->route('afad.profile.create');
         }
+        $submissionFilters = $request->validate([
+            'submission_search' => ['nullable', 'string', 'max:100'],
+            'submission_type' => ['nullable', 'string', 'in:' . implode(',', array_keys(Submission::TYPES))],
+            'submission_course' => ['nullable', 'string', 'max:50'],
+            'submission_date_from' => ['nullable', 'date'],
+            'submission_date_to' => ['nullable', 'date'],
+        ]);
+
         $claims = $profile->claims()->with('appointment')->latest()->paginate(10);
-        $uploadedSubmissions = $this->uploadedSubmissions($profile);
-        return view('afad.claims.index', compact('claims', 'uploadedSubmissions'));
+        $uploadedSubmissions = $this->filteredUploadedSubmissions($profile, $submissionFilters);
+        $submissionCourses = $profile->submissions()
+            ->whereNotNull('course')
+            ->distinct()
+            ->orderBy('course')
+            ->pluck('course');
+        $submissionTypes = Submission::TYPES;
+
+        return view('afad.claims.index', compact('claims', 'uploadedSubmissions', 'submissionFilters', 'submissionCourses', 'submissionTypes'));
     }
 
     public function create(): View|RedirectResponse
@@ -36,10 +51,10 @@ class ClaimController extends Controller
         $submissionTotals = $this->submissionAmountDefaults($profile);
         $uploadedSubmissions = $this->uploadedSubmissions($profile);
         $videoRecordingRows = $this->videoRecordingClaimRows($profile);
-        $hasRecordingSubmission = $profile->submissions()
+        $hasRecordingSubmission = $this->submissionQuery($profile)
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        $hasAttendanceSubmission = $profile->submissions()
+        $hasAttendanceSubmission = $this->submissionQuery($profile)
             ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
             ->exists();
         return view('afad.claims.create', compact('profile', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
@@ -91,6 +106,7 @@ class ClaimController extends Controller
         $claim = Claim::create($data);
 
         $this->createDocumentChecklist($claim);
+        $this->lockSubmissionsToClaim($profile, $claim);
 
         ClaimAudit::record($claim, 'created', null, 'draft');
 
@@ -114,12 +130,12 @@ class ClaimController extends Controller
     {
         abort_if($claim->profile->user_id !== auth()->id(), 403);
         $claim->load(['appointment', 'documents', 'audits.performer', 'pcEndorser']);
-        $uploadedSubmissions = $this->uploadedSubmissions($claim->profile);
-        $videoRecordingRows = $this->videoRecordingClaimRows($claim->profile);
-        $hasRecordingSubmission = $claim->profile->submissions()
+        $uploadedSubmissions = $this->uploadedSubmissions($claim->profile, $claim);
+        $videoRecordingRows = $this->videoRecordingClaimRows($claim->profile, $claim);
+        $hasRecordingSubmission = $this->submissionQuery($claim->profile, $claim)
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        $hasAttendanceSubmission = $claim->profile->submissions()
+        $hasAttendanceSubmission = $this->submissionQuery($claim->profile, $claim)
             ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
             ->exists();
         return view('afad.claims.show', compact('claim', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
@@ -132,14 +148,14 @@ class ClaimController extends Controller
 
         $profile = auth()->user()->profile;
         $appointments = $profile->appointments()->active()->get();
-        $submissionChecklist = $this->submissionChecklistDefaults($profile);
-        $submissionTotals = $this->submissionAmountDefaults($profile);
-        $uploadedSubmissions = $this->uploadedSubmissions($profile);
-        $videoRecordingRows = $this->videoRecordingClaimRows($profile);
-        $hasRecordingSubmission = $profile->submissions()
+        $submissionChecklist = $this->submissionChecklistDefaults($profile, $claim);
+        $submissionTotals = $this->submissionAmountDefaults($profile, $claim);
+        $uploadedSubmissions = $this->uploadedSubmissions($profile, $claim);
+        $videoRecordingRows = $this->videoRecordingClaimRows($profile, $claim);
+        $hasRecordingSubmission = $this->submissionQuery($profile, $claim)
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->exists();
-        $hasAttendanceSubmission = $profile->submissions()
+        $hasAttendanceSubmission = $this->submissionQuery($profile, $claim)
             ->where('submission_type', Submission::TYPE_ATTENDANCE_SHEET)
             ->exists();
         return view('afad.claims.edit', compact('claim', 'appointments', 'submissionChecklist', 'submissionTotals', 'uploadedSubmissions', 'videoRecordingRows', 'hasRecordingSubmission', 'hasAttendanceSubmission'));
@@ -171,7 +187,7 @@ class ClaimController extends Controller
             return back()->withErrors($error)->withInput();
         }
         $claimItems = $this->normalizeClaimItems($data['claim_items']);
-        $submissionTotals = $this->submissionAmountDefaults($claim->profile);
+        $submissionTotals = $this->submissionAmountDefaults($claim->profile, $claim);
         $firstItem = $claimItems[0];
 
         $data['period_from'] = $claim->appointment->start_date;
@@ -182,7 +198,7 @@ class ClaimController extends Controller
         $data['total_hours'] = round(collect($claimItems)->sum('total_hours'), 2);
         $data['rate_per_hour'] = $firstItem['rate'];
         $data['total_amount'] = round(collect($claimItems)->sum('amount') + ($submissionTotals['amount'] ?? 0), 2);
-        $data = array_merge($data, $this->submissionChecklistData($claim->profile));
+        $data = array_merge($data, $this->submissionChecklistData($claim->profile, $claim));
 
         $claim->update($data);
         ClaimAudit::record($claim, 'edited', $claim->status, $claim->status);
@@ -270,14 +286,14 @@ class ClaimController extends Controller
         return null;
     }
 
-    private function submissionChecklistData($profile): array
+    private function submissionChecklistData($profile, ?Claim $claim = null): array
     {
-        return $this->submissionChecklistDefaults($profile);
+        return $this->submissionChecklistDefaults($profile, $claim);
     }
 
-    private function submissionChecklistDefaults($profile): array
+    private function submissionChecklistDefaults($profile, ?Claim $claim = null): array
     {
-        $submittedTypes = $profile->submissions()
+        $submittedTypes = $this->submissionQuery($profile, $claim)
             ->whereIn('submission_type', array_keys(Submission::CLAIM_CHECKLIST_MAP))
             ->pluck('submission_type')
             ->all();
@@ -290,9 +306,9 @@ class ClaimController extends Controller
         return $defaults;
     }
 
-    private function submissionAmountDefaults($profile): array
+    private function submissionAmountDefaults($profile, ?Claim $claim = null): array
     {
-        $submissions = $profile->submissions()
+        $submissions = $this->submissionQuery($profile, $claim)
             ->whereNotNull('total_amount')
             ->get(['claim_hours', 'rate_per_hour', 'total_amount']);
 
@@ -303,12 +319,13 @@ class ClaimController extends Controller
         return compact('hours', 'rate', 'amount');
     }
 
-    private function uploadedSubmissions($profile)
+    private function uploadedSubmissions($profile, ?Claim $claim = null)
     {
-        return $profile->submissions()
+        return $this->submissionQuery($profile, $claim)
             ->latest()
             ->get([
                 'id',
+                'claim_id',
                 'submission_type',
                 'title',
                 'course',
@@ -323,9 +340,43 @@ class ClaimController extends Controller
             ]);
     }
 
-    private function videoRecordingClaimRows($profile): array
+    private function filteredUploadedSubmissions($profile, array $filters)
     {
         return $profile->submissions()
+            ->when($filters['submission_search'] ?? null, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('course_name', 'like', "%{$search}%")
+                        ->orWhere('programme', 'like', "%{$search}%")
+                        ->orWhere('submission_type', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['submission_type'] ?? null, fn($query, $type) => $query->where('submission_type', $type))
+            ->when($filters['submission_course'] ?? null, fn($query, $course) => $query->where('course', $course))
+            ->when($filters['submission_date_from'] ?? null, fn($query, $date) => $query->whereDate('submission_date', '>=', $date))
+            ->when($filters['submission_date_to'] ?? null, fn($query, $date) => $query->whereDate('submission_date', '<=', $date))
+            ->latest()
+            ->get([
+                'id',
+                'claim_id',
+                'submission_type',
+                'title',
+                'course',
+                'course_name',
+                'tutorial_number',
+                'submission_date',
+                'claim_hours',
+                'rate_per_hour',
+                'total_amount',
+                'status',
+                'created_at',
+            ]);
+    }
+
+    private function videoRecordingClaimRows($profile, ?Claim $claim = null): array
+    {
+        return $this->submissionQuery($profile, $claim)
             ->where('submission_type', Submission::TYPE_VIDEO_RECORDING)
             ->whereNotNull('rate_per_hour')
             ->orderBy('course')
@@ -362,5 +413,21 @@ class ClaimController extends Controller
             })
             ->values()
             ->all();
+    }
+
+    private function submissionQuery($profile, ?Claim $claim = null)
+    {
+        $query = $profile->submissions();
+
+        return $claim
+            ? $query->where('claim_id', $claim->id)
+            : $query->whereNull('claim_id');
+    }
+
+    private function lockSubmissionsToClaim($profile, Claim $claim): void
+    {
+        $profile->submissions()
+            ->whereNull('claim_id')
+            ->update(['claim_id' => $claim->id]);
     }
 }

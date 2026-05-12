@@ -80,6 +80,16 @@
                                 @else
                                     <span class="badge bg-warning text-dark">Pending</span>
                                 @endif
+                                @if($sub->isQuestionBankAnswerSheet())
+                                    <div class="mt-1">
+                                        <span class="badge {{ $sub->pc_qbas_status_badge_class }}">
+                                            {{ $sub->pc_qbas_status_label }}
+                                        </span>
+                                    </div>
+                                    @if($sub->pc_qbas_remarks)
+                                        <div class="small text-muted mt-1">{{ $sub->pc_qbas_remarks }}</div>
+                                    @endif
+                                @endif
                             </td>
                             <td class="small text-muted">{{ $sub->reviewed_at?->format('d M Y') ?? '—' }}</td>
                             <td>
