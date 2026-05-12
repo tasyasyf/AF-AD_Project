@@ -31,7 +31,6 @@ class Submission extends Model
         self::TYPE_ATTENDANCE_SHEET => 'Attendance Sheet',
         self::TYPE_MARK_ENTRY_FORMS => 'Mark-entry Forms',
         self::TYPE_QA => 'Question Paper & Answer Sheet',
-        self::TYPE_QUESTION_BANK_ANSWER_SHEET => 'QB-AS',
     ];
 
     public const CLAIM_CHECKLIST_MAP = [
