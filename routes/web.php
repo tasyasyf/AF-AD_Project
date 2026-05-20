@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\AfAd;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Executive;
+use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\ProgramCoordinator;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,7 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+Route::get('/profile-photo/{user}', [ProfilePhotoController::class, 'show'])->name('profile-photo.show')->middleware('auth');
 
 // AF/AD routes
 Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(function () {
@@ -79,10 +82,15 @@ Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(f
 // Executive routes
 Route::prefix('executive')->name('executive.')->middleware(['auth', 'role:executive'])->group(function () {
     Route::get('/dashboard', [Executive\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [AccountProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [AccountProfileController::class, 'update'])->name('profile.update');
 
     // Profile verification
     Route::get('/profiles', [Executive\ProfileVerificationController::class, 'index'])->name('profiles.index');
     Route::get('/profiles/{profile}', [Executive\ProfileVerificationController::class, 'show'])->name('profiles.show');
+    Route::get('/profiles/{profile}/resume/view', [Executive\ProfileVerificationController::class, 'viewResume'])->name('profiles.resume.view');
+    Route::get('/profiles/{profile}/certificates/{certificate}/view', [Executive\ProfileVerificationController::class, 'viewCertificate'])->name('profiles.certificates.view');
+    Route::post('/profiles/{profile}/documents/verify', [Executive\ProfileVerificationController::class, 'verifyDocuments'])->name('profiles.documents.verify');
     Route::post('/profiles/{profile}/verify', [Executive\ProfileVerificationController::class, 'verify'])->name('profiles.verify');
     Route::post('/profiles/{profile}/reject', [Executive\ProfileVerificationController::class, 'reject'])->name('profiles.reject');
 
@@ -111,6 +119,8 @@ Route::prefix('executive')->name('executive.')->middleware(['auth', 'role:execut
 // Program Coordinator routes
 Route::prefix('pc')->name('pc.')->middleware(['auth', 'role:pc'])->group(function () {
     Route::get('/dashboard', [ProgramCoordinator\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [AccountProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [AccountProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/afad', [ProgramCoordinator\AfAdController::class, 'index'])->name('afad.index');
     Route::get('/afad/{profile}', [ProgramCoordinator\AfAdController::class, 'show'])->name('afad.show');
@@ -121,6 +131,7 @@ Route::prefix('pc')->name('pc.')->middleware(['auth', 'role:pc'])->group(functio
     Route::get('/nomination', [ProgramCoordinator\NominationController::class, 'index'])->name('nomination.index');
     Route::get('/document-checklist', [ProgramCoordinator\DocumentChecklistController::class, 'index'])->name('document-checklist.index');
     Route::get('/document-checklist/submissions/{submission}/view', [ProgramCoordinator\DocumentChecklistController::class, 'viewSubmission'])->name('document-checklist.submissions.view');
+    Route::get('/document-checklist/claim-documents/{document}/view', [ProgramCoordinator\DocumentChecklistController::class, 'viewClaimDocument'])->name('document-checklist.claim-documents.view');
     Route::post('/document-checklist/qbas/{submission}/confirm', [ProgramCoordinator\DocumentChecklistController::class, 'confirmQbAs'])->name('document-checklist.qbas.confirm');
     Route::post('/document-checklist/qbas/{submission}/reject', [ProgramCoordinator\DocumentChecklistController::class, 'rejectQbAs'])->name('document-checklist.qbas.reject');
     Route::get('/claims', [ProgramCoordinator\ClaimReviewController::class, 'index'])->name('claims.index');

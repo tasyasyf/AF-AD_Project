@@ -19,7 +19,7 @@ class ProfileController extends Controller
             return redirect()->route('afad.profile.create')
                 ->with('info', 'Please complete your profile registration first.');
         }
-        $profile->load('certificates');
+        $profile->load(['certificates', 'verifier']);
         return view('afad.profile.show', compact('profile'));
     }
 
@@ -52,6 +52,7 @@ class ProfileController extends Controller
             'bank_name'            => ['required', 'string', 'max:100'],
             'bank_account_number'  => ['required', 'string', 'max:30'],
             'bank_account_holder'  => ['required', 'string', 'max:150'],
+            'profile_photo'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'resume'               => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
             'certificates'         => ['nullable', 'array'],
             'certificates.*.title'               => ['required_with:certificates', 'string', 'max:255'],
@@ -61,6 +62,19 @@ class ProfileController extends Controller
         ]);
 
         $data['user_id'] = auth()->id();
+        $user = auth()->user();
+
+        if ($request->hasFile('profile_photo')) {
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            $file = $request->file('profile_photo');
+            $user->update([
+                'profile_photo_path' => $file->store('profile-photos', 'public'),
+                'profile_photo_original_name' => $file->getClientOriginalName(),
+            ]);
+        }
 
         // Handle resume upload
         if ($request->hasFile('resume')) {
@@ -70,7 +84,7 @@ class ProfileController extends Controller
             $data['resume_size']          = $file->getSize();
         }
 
-        $profile = Profile::create(collect($data)->except(['certificates', 'resume'])->toArray());
+        $profile = Profile::create(collect($data)->except(['certificates', 'resume', 'profile_photo'])->toArray());
 
         // Store uploaded certificates
         if ($request->has('certificates')) {
@@ -129,6 +143,8 @@ class ProfileController extends Controller
             'bank_name'            => ['required', 'string', 'max:100'],
             'bank_account_number'  => ['required', 'string', 'max:30'],
             'bank_account_holder'  => ['required', 'string', 'max:150'],
+            'profile_photo'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'remove_profile_photo' => ['nullable', 'boolean'],
             'resume'               => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
             'remove_resume'        => ['nullable', 'boolean'],
             'new_certificates'     => ['nullable', 'array'],
@@ -137,6 +153,25 @@ class ProfileController extends Controller
             'new_certificates.*.year_obtained'       => ['required_with:new_certificates', 'integer', 'min:1950', 'max:' . date('Y')],
             'new_certificates.*.file'                => ['required_with:new_certificates', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
+        $user = auth()->user();
+
+        if ($request->hasFile('profile_photo')) {
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            $file = $request->file('profile_photo');
+            $user->update([
+                'profile_photo_path' => $file->store('profile-photos', 'public'),
+                'profile_photo_original_name' => $file->getClientOriginalName(),
+            ]);
+        } elseif ($request->boolean('remove_profile_photo') && $user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+            $user->update([
+                'profile_photo_path' => null,
+                'profile_photo_original_name' => null,
+            ]);
+        }
 
         // Handle resume upload or removal
         if ($request->hasFile('resume')) {
@@ -154,10 +189,12 @@ class ProfileController extends Controller
             $data['resume_size']          = null;
         }
 
-        $profile->update(collect($data)->except(['new_certificates', 'resume', 'remove_resume'])->toArray() + [
+        $profile->update(collect($data)->except(['new_certificates', 'resume', 'remove_resume', 'profile_photo', 'remove_profile_photo'])->toArray() + [
             'status' => 'pending',
             'rejection_reason' => null,
             'rejection_sections' => null,
+            'documents_verified_by' => null,
+            'documents_verified_at' => null,
         ]);
 
         $profile->certificates()->update([

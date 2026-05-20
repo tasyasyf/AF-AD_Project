@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ProgramCoordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\ClaimDocument;
 use App\Models\Submission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,5 +103,13 @@ class DocumentChecklistController extends Controller
         abort_if(!Storage::disk('local')->exists($submission->file_path), 404);
 
         return Storage::disk('local')->response($submission->file_path, $submission->file_original_name);
+    }
+
+    public function viewClaimDocument(ClaimDocument $document): StreamedResponse
+    {
+        abort_if(!$document->is_uploaded || !$document->file_path, 404);
+        abort_if(!Storage::disk('local')->exists($document->file_path), 404);
+
+        return Storage::disk('local')->response($document->file_path, $document->file_original_name);
     }
 }

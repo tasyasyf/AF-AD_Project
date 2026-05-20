@@ -74,6 +74,19 @@
 
     <div class="col-lg-4">
         <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Profile Photo</div>
+            <div class="card-body text-center">
+                @if($profile->user->profile_photo_path)
+                    <img src="{{ route('profile-photo.show', $profile->user) }}" alt="{{ $profile->full_name }}" class="profile-photo-lg">
+                @else
+                    <span class="profile-photo-lg profile-photo-placeholder">
+                        <i class="bi bi-person"></i>
+                    </span>
+                @endif
+            </div>
+        </div>
+
+        <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Verification</div>
             <div class="card-body small">
                 <div><strong>Verified by:</strong> {{ $profile->verifier?->name ?? 'School Executive' }}</div>

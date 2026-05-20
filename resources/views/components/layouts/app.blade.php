@@ -96,6 +96,37 @@
             display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 1030; }
         #topbar .fw-semibold { color: var(--portal-ink); }
+        .topbar-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--portal-border);
+            background: var(--portal-soft);
+            color: var(--portal-red);
+            flex: 0 0 36px;
+        }
+        .topbar-avatar-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+        }
+        .profile-photo-lg {
+            width: 132px;
+            height: 132px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--portal-border);
+            background: var(--portal-soft);
+            color: var(--portal-red);
+        }
+        .profile-photo-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+        }
         .page-content { padding: 1.75rem; }
 
         /* Cards */
@@ -247,6 +278,15 @@
                 <span class="text-muted fw-semibold">{{ $title ?? '' }}</span>
             </div>
             <div class="d-flex align-items-center gap-3">
+                @if(!auth()->user()->isAdmin())
+                    @if(auth()->user()->profile_photo_path)
+                        <img src="{{ route('profile-photo.show', auth()->user()) }}" alt="{{ auth()->user()->name }}" class="topbar-avatar">
+                    @else
+                        <span class="topbar-avatar topbar-avatar-placeholder" aria-label="No profile photo">
+                            <i class="bi bi-person"></i>
+                        </span>
+                    @endif
+                @endif
                 <span class="text-muted small">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

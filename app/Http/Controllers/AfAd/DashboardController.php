@@ -10,7 +10,7 @@ class DashboardController extends Controller
     public function index(): View
     {
         $user = auth()->user();
-        $profile = $user->profile;
+        $profile = $user->profile()->with('verifier')->first();
 
         $stats = [
             'profile_status'    => $profile?->status ?? 'not_registered',
@@ -23,6 +23,10 @@ class DashboardController extends Controller
             ? $profile->claims()->with('appointment')->latest()->take(5)->get()
             : collect();
 
-        return view('afad.dashboard', compact('profile', 'stats', 'recent_claims'));
+        $submission_documents = $profile
+            ? $profile->submissions()->latest()->take(12)->get()
+            : collect();
+
+        return view('afad.dashboard', compact('profile', 'stats', 'recent_claims', 'submission_documents'));
     }
 }

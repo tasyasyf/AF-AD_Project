@@ -61,6 +61,11 @@
                                 ->where('submission_type', \App\Models\Submission::TYPE_ATTENDANCE_SHEET)
                                 ->sortByDesc('created_at')
                                 ->first();
+                            $legacyAttendanceDocument = $appointment->claims
+                                ->flatMap(fn ($claim) => $claim->documents)
+                                ->filter(fn ($document) => $document->document_type === 'attendance_sheet' && $document->is_uploaded)
+                                ->sortByDesc('uploaded_at')
+                                ->first();
                             $hasLegacyAttendance = $appointment->claims
                                 ->flatMap(fn ($claim) => $claim->documents)
                                 ->contains(fn ($document) => $document->document_type === 'attendance_sheet' && $document->is_uploaded);
@@ -146,9 +151,28 @@
                                                 <div>
                                                     <div>Attendance Sheet</div>
                                                     @if($attendanceSubmission)
-                                                        <a href="{{ route('pc.document-checklist.submissions.view', $attendanceSubmission) }}" target="_blank" rel="noopener" class="small text-decoration-none">
-                                                            <i class="bi bi-box-arrow-up-right me-1"></i>View uploaded file
-                                                        </a>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary review-document-btn"
+                                                                data-review-url="{{ route('pc.document-checklist.submissions.view', $attendanceSubmission) }}"
+                                                                data-review-title="Attendance Sheet">
+                                                                <i class="bi bi-eye me-1"></i> Review File
+                                                            </button>
+                                                            <a href="{{ route('pc.document-checklist.submissions.view', $attendanceSubmission) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open
+                                                            </a>
+                                                        </div>
+                                                    @elseif($legacyAttendanceDocument)
+                                                        <div class="small text-muted">Uploaded in old claim document records.</div>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary review-document-btn"
+                                                                data-review-url="{{ route('pc.document-checklist.claim-documents.view', $legacyAttendanceDocument) }}"
+                                                                data-review-title="Attendance Sheet">
+                                                                <i class="bi bi-eye me-1"></i> Review File
+                                                            </button>
+                                                            <a href="{{ route('pc.document-checklist.claim-documents.view', $legacyAttendanceDocument) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open
+                                                            </a>
+                                                        </div>
                                                     @elseif($hasLegacyAttendance)
                                                         <div class="small text-muted">Uploaded in old claim document records.</div>
                                                     @endif
@@ -159,9 +183,16 @@
                                                 <div>
                                                     <div>QB-AS</div>
                                                     @if($qbAsSubmission)
-                                                        <a href="{{ route('pc.document-checklist.submissions.view', $qbAsSubmission) }}" target="_blank" rel="noopener" class="small text-decoration-none">
-                                                            <i class="bi bi-box-arrow-up-right me-1"></i>View uploaded file
-                                                        </a>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary review-document-btn"
+                                                                data-review-url="{{ route('pc.document-checklist.submissions.view', $qbAsSubmission) }}"
+                                                                data-review-title="QB-AS">
+                                                                <i class="bi bi-eye me-1"></i> Review File
+                                                            </button>
+                                                            <a href="{{ route('pc.document-checklist.submissions.view', $qbAsSubmission) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open
+                                                            </a>
+                                                        </div>
                                                     @endif
                                                 </div>
                                                 <span class="badge {{ $hasQbAs ? 'bg-success' : 'bg-secondary' }}">{{ $hasQbAs ? 'Uploaded' : 'Missing' }}</span>
@@ -170,13 +201,30 @@
                                                 <div>
                                                     <div>MEF</div>
                                                     @if($mefSubmission)
-                                                        <a href="{{ route('pc.document-checklist.submissions.view', $mefSubmission) }}" target="_blank" rel="noopener" class="small text-decoration-none">
-                                                            <i class="bi bi-box-arrow-up-right me-1"></i>View uploaded file
-                                                        </a>
+                                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary review-document-btn"
+                                                                data-review-url="{{ route('pc.document-checklist.submissions.view', $mefSubmission) }}"
+                                                                data-review-title="MEF">
+                                                                <i class="bi bi-eye me-1"></i> Review File
+                                                            </button>
+                                                            <a href="{{ route('pc.document-checklist.submissions.view', $mefSubmission) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open
+                                                            </a>
+                                                        </div>
                                                     @endif
                                                 </div>
                                                 <span class="badge {{ $hasMef ? 'bg-success' : 'bg-secondary' }}">{{ $hasMef ? 'Uploaded' : 'Missing' }}</span>
                                             </div>
+                                        </div>
+
+                                        <div class="document-preview-panel border rounded mb-3 d-none">
+                                            <div class="d-flex justify-content-between align-items-center gap-2 border-bottom px-3 py-2">
+                                                <div class="fw-semibold small document-preview-title">Document Preview</div>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary document-preview-close">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <iframe class="document-preview-frame" title="Document preview"></iframe>
                                         </div>
 
                                         @if($qbAsSubmission)
@@ -245,4 +293,45 @@
     </div>
 </div>
 
+<style>
+    .document-preview-frame {
+        width: 100%;
+        height: min(62vh, 520px);
+        border: 0;
+        background: #fff;
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.modal').forEach(function (modal) {
+        const previewPanel = modal.querySelector('.document-preview-panel');
+        const previewFrame = modal.querySelector('.document-preview-frame');
+        const previewTitle = modal.querySelector('.document-preview-title');
+        const closeButton = modal.querySelector('.document-preview-close');
+
+        modal.querySelectorAll('.review-document-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                if (!previewPanel || !previewFrame || !previewTitle) return;
+
+                previewTitle.textContent = button.dataset.reviewTitle + ' Preview';
+                previewFrame.src = button.dataset.reviewUrl;
+                previewPanel.classList.remove('d-none');
+                previewPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        });
+
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
+                previewPanel.classList.add('d-none');
+                previewFrame.src = '';
+            });
+        }
+
+        modal.addEventListener('hidden.bs.modal', function () {
+            if (previewFrame) previewFrame.src = '';
+            if (previewPanel) previewPanel.classList.add('d-none');
+        });
+    });
+});
+</script>
 </x-layouts.app>

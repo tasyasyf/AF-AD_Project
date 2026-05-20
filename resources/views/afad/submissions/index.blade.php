@@ -7,6 +7,12 @@
     </a>
 </div>
 
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <x-submission-documents-notification :submissions="$submissions" />
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body p-0">
         @if($submissions->isEmpty())

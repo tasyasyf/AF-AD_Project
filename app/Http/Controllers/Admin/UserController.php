@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = User::latest();
+        $query = User::with(['profile.verifier'])->latest();
 
         if ($request->filled('role')) {
             $query->where('role', $request->role);

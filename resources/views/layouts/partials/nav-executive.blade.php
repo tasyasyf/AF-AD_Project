@@ -3,6 +3,9 @@
     <a href="{{ route('executive.dashboard') }}" class="nav-link {{ request()->routeIs('executive.dashboard') ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i> Dashboard
     </a>
+    <a href="{{ route('executive.profile.show') }}" class="nav-link {{ request()->routeIs('executive.profile.*') ? 'active' : '' }}">
+        <i class="bi bi-person-circle"></i> My Profile
+    </a>
 
     <div class="nav-section">Profiles</div>
     <a href="{{ route('executive.profiles.index') }}" class="nav-link {{ request()->routeIs('executive.profiles.*') ? 'active' : '' }}">

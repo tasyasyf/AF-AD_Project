@@ -86,6 +86,15 @@
     </div>
 @endif
 
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <x-verification-timeline :profile="$profile" />
+    </div>
+    <div class="col-xl-6">
+        <x-submission-documents-notification :submissions="$submission_documents" />
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Recent Claims</span>

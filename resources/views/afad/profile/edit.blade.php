@@ -212,6 +212,13 @@
     </div>
 
     <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold">Profile Photo</div>
+            <div class="card-body text-center">
+                <x-profile-photo-uploader :user="auth()->user()" :photo-alt="auth()->user()->name" :show-remove="true" />
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header bg-white fw-semibold">Save Changes</div>
             <div class="card-body">

@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'qualification', 'qualification_level', 'specialisation', 'area_of_expertise',
     'resume_path', 'resume_original_name', 'resume_size',
     'bank_name', 'bank_account_number', 'bank_account_holder',
-    'status', 'verified_by', 'verified_at', 'rejection_reason', 'rejection_sections',
+    'status', 'verified_by', 'verified_at', 'documents_verified_by', 'documents_verified_at',
+    'rejection_reason', 'rejection_sections',
 ])]
 class Profile extends Model
 {
@@ -26,6 +27,7 @@ class Profile extends Model
         return [
             'date_of_birth' => 'date',
             'verified_at'   => 'datetime',
+            'documents_verified_at' => 'datetime',
             'rejection_sections' => 'array',
         ];
     }
@@ -38,6 +40,11 @@ class Profile extends Model
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function documentsVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'documents_verified_by');
     }
 
     public function certificates(): HasMany

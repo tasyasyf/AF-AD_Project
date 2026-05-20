@@ -3,6 +3,9 @@
     <a href="{{ route('pc.dashboard') }}" class="nav-link {{ request()->routeIs('pc.dashboard') ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i> Dashboard
     </a>
+    <a href="{{ route('pc.profile.show') }}" class="nav-link {{ request()->routeIs('pc.profile.*') ? 'active' : '' }}">
+        <i class="bi bi-person-circle"></i> My Profile
+    </a>
 
     <div class="nav-section">Coordinator</div>
     <a href="{{ route('pc.afad.index') }}" class="nav-link {{ request()->routeIs('pc.afad.*') ? 'active' : '' }}">
