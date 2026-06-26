@@ -7,8 +7,11 @@ use App\Models\Claim;
 use App\Models\ClaimAudit;
 use App\Models\ClaimDocument;
 use App\Models\Submission;
+use App\Models\User;
+use App\Notifications\ClaimSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class ClaimController extends Controller
@@ -116,6 +119,7 @@ class ClaimController extends Controller
             ]);
 
             ClaimAudit::record($claim, 'submitted', 'draft', 'submitted');
+            $this->notifyExecutives($claim);
 
             return redirect()->route('afad.claims.index')
                 ->with('success', 'Claim submitted successfully.');
@@ -216,9 +220,19 @@ class ClaimController extends Controller
         ]);
 
         ClaimAudit::record($claim, 'submitted', 'draft', 'submitted');
+        $this->notifyExecutives($claim);
 
         return redirect()->route('afad.claims.show', $claim)
             ->with('success', 'Claim submitted for review.');
+    }
+
+    /**
+     * Notify all School Executives that a claim is awaiting their approval.
+     */
+    private function notifyExecutives(Claim $claim): void
+    {
+        $executives = User::where('role', 'executive')->where('is_active', true)->get();
+        Notification::send($executives, new ClaimSubmittedNotification($claim));
     }
 
     public function destroy(Claim $claim): RedirectResponse

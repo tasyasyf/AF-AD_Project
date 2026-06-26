@@ -68,43 +68,6 @@
             </div>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <span class="fw-semibold">9a. Verify Document Completeness</span>
-                @if($profile->documents_verified_at)
-                    <span class="badge bg-success">Confirmed</span>
-                @else
-                    <span class="badge bg-warning text-dark">Pending</span>
-                @endif
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary flex-shrink-0" style="width:42px;height:42px">
-                        <i class="bi bi-folder-check"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold">SE confirms before verifying</div>
-                        <div class="text-muted small">
-                            Review uploaded Resume / CV and certificate files before clicking Verify Profile.
-                        </div>
-                        @if($profile->documents_verified_at)
-                            <div class="small text-success mt-2">
-                                Confirmed by {{ $profile->documentsVerifier?->name ?? 'School Executive' }}
-                                on {{ $profile->documents_verified_at->format('d M Y H:i') }}.
-                            </div>
-                        @elseif(!$documentsComplete)
-                            <div class="small text-warning mt-2">
-                                Resume / CV and at least one certificate are required before document completeness can be confirmed.
-                            </div>
-                        @endif
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#documentCompletenessModal">
-                        Review Documents
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Certificates -->
         <div class="card">
             <div class="card-header bg-white fw-semibold">Certificates</div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\AfAd;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Executive;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\ProgramCoordinator;
 use Illuminate\Support\Facades\Route;
@@ -13,13 +14,20 @@ use Illuminate\Support\Facades\Route;
 // Root redirect
 Route::get('/', fn () => redirect()->route('login'));
 
-// Auth routes
+// Auth routes jahkdsidskjwennkdjskndkslmxlfskorejs]]fdjkfdk kdiwejrjksdsmsd
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/profile-photo/{user}', [ProfilePhotoController::class, 'show'])->name('profile-photo.show')->middleware('auth');
+
+// Notifications (all authenticated roles)
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+});
 
 // AF/AD routes
 Route::prefix('afad')->name('afad.')->middleware(['auth', 'role:afad'])->group(function () {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Executive;
 use App\Http\Controllers\Controller;
 use App\Models\Claim;
 use App\Models\ClaimAudit;
+use App\Notifications\ClaimApprovedNotification;
+use App\Notifications\ClaimRejectedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -69,6 +71,7 @@ class ClaimReviewController extends Controller
         ]);
 
         ClaimAudit::record($claim, 'approved', $oldStatus, 'approved', $request->remarks);
+        $this->notifyClaimant($claim, new ClaimApprovedNotification($claim));
 
         return redirect()->route('executive.claims.show', $claim)
             ->with('success', "Claim {$claim->claim_reference} has been approved and is ready for Program Coordinator endorsement.");
@@ -113,8 +116,18 @@ class ClaimReviewController extends Controller
         ]);
 
         ClaimAudit::record($claim, 'rejected', $oldStatus, 'rejected', $request->remarks);
+        $this->notifyClaimant($claim, new ClaimRejectedNotification($claim));
 
         return redirect()->route('executive.claims.show', $claim)
             ->with('success', "Claim {$claim->claim_reference} has been rejected.");
+    }
+
+    /**
+     * Notify the AF/AD who owns the claim of the review outcome.
+     */
+    private function notifyClaimant(Claim $claim, $notification): void
+    {
+        $owner = $claim->profile->user;
+        $owner?->notify($notification);
     }
 }

@@ -278,6 +278,7 @@
                 <span class="text-muted fw-semibold">{{ $title ?? '' }}</span>
             </div>
             <div class="d-flex align-items-center gap-3">
+                <x-notification-bell />
                 @if(!auth()->user()->isAdmin())
                     @if(auth()->user()->profile_photo_path)
                         <img src="{{ route('profile-photo.show', auth()->user()) }}" alt="{{ auth()->user()->name }}" class="topbar-avatar">
