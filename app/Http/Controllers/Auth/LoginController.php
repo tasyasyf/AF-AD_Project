@@ -45,10 +45,13 @@ class LoginController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $timedOut = $request->boolean('timeout');
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login');
+
+        return redirect()->route('login', $timedOut ? ['timeout' => 1] : []);
     }
 
     private function redirectByRole(): RedirectResponse

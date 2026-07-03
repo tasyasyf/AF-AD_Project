@@ -3,8 +3,8 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\AfAd;
+use App\Http\Controllers\AccessController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Executive;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfilePhotoController;
@@ -17,8 +17,6 @@ Route::get('/', fn () => redirect()->route('login'));
 // Auth routes jahkdsidskjwennkdjskndkslmxlfskorejs]]fdjkfdk kdiwejrjksdsmsd
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/profile-photo/{user}', [ProfilePhotoController::class, 'show'])->name('profile-photo.show')->middleware('auth');
 
@@ -27,6 +25,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+});
+
+// Additional Access — read-only viewer pages, gated per-page by admin-granted permissions.
+Route::prefix('access')->name('access.')->middleware('auth')->group(function () {
+    Route::get('/profiles', [AccessController::class, 'profiles'])->middleware('permitted:view.profiles')->name('profiles.index');
+    Route::get('/appointments', [AccessController::class, 'appointments'])->middleware('permitted:view.appointments')->name('appointments.index');
+    Route::get('/claims', [AccessController::class, 'claims'])->middleware('permitted:view.claims')->name('claims.index');
+    Route::get('/submissions', [AccessController::class, 'submissions'])->middleware('permitted:view.submissions')->name('submissions.index');
+    Route::get('/certificates', [AccessController::class, 'certificates'])->middleware('permitted:view.certificates')->name('certificates.index');
+    Route::get('/reports', [AccessController::class, 'reports'])->middleware('permitted:view.reports')->name('reports.index');
+    Route::get('/reports/export', [AccessController::class, 'reportsExport'])->middleware('permitted:view.reports')->name('reports.export');
 });
 
 // AF/AD routes
@@ -153,6 +162,11 @@ Route::prefix('pc')->name('pc.')->middleware(['auth', 'role:pc'])->group(functio
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Permissions (Additional Access grants)
+    Route::get('/permissions', [Admin\PermissionController::class, 'index'])->name('permissions.index');
+    Route::get('/permissions/{user}', [Admin\PermissionController::class, 'edit'])->name('permissions.edit');
+    Route::put('/permissions/{user}', [Admin\PermissionController::class, 'update'])->name('permissions.update');
 
     // Users / roles
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');

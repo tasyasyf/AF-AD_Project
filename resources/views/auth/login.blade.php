@@ -23,6 +23,12 @@
                     </div>
                 @endif
 
+                @if (request()->boolean('timeout'))
+                    <div class="alert alert-warning py-2 small">
+                        Your session has ended, please log in again.
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login.attempt') }}">
                     @csrf
                     <div class="mb-3">
@@ -58,12 +64,6 @@
                         Login <i class="bi bi-box-arrow-in-right ms-1"></i>
                     </button>
                 </form>
-
-                <div class="auth-divider">New to the Portal?</div>
-
-                <a href="{{ route('register') }}" class="btn btn-outline-primary w-100 py-2 fw-semibold">
-                    Register
-                </a>
 
                 <p class="auth-terms text-center">
                     By logging in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Security Protocols</a>.

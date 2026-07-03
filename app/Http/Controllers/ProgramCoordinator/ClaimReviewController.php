@@ -24,6 +24,14 @@ class ClaimReviewController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('endorsement')) {
+            if ($request->endorsement === 'endorsed') {
+                $query->whereNotNull('pc_endorsed_at');
+            } elseif ($request->endorsement === 'pending') {
+                $query->where('status', 'approved')->whereNull('pc_endorsed_at');
+            }
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($claim) use ($search) {

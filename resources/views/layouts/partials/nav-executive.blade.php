@@ -29,4 +29,6 @@
     <a href="{{ route('executive.submissions.index') }}" class="nav-link {{ request()->routeIs('executive.submissions.*') ? 'active' : '' }}">
         <i class="bi bi-camera-video"></i> AF/AD Submissions
     </a>
+
+    @include('layouts.partials.nav-additional-access')
 </div>

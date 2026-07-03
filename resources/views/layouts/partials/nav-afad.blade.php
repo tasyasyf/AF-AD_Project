@@ -40,4 +40,6 @@
     <a href="{{ route('afad.submissions.create') }}" class="nav-link">
         <i class="bi bi-cloud-upload"></i> New Submission
     </a>
+
+    @include('layouts.partials.nav-additional-access')
 </div>

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? config('app.name', 'AF/AD System') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -289,7 +290,7 @@
                     @endif
                 @endif
                 <span class="text-muted small">{{ auth()->user()->name }}</span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" id="logout-form">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-box-arrow-right"></i> Logout
@@ -306,5 +307,37 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auto-logout after 2 minutes of inactivity -->
+    <script>
+        (function () {
+            const IDLE_LIMIT_MS = 120000; // 2 minutes
+            let idleTimer = null;
+
+            function logoutDueToInactivity() {
+                const form = document.getElementById('logout-form');
+                if (!form) return;
+
+                // Flag the logout as caused by inactivity so the login page can inform the user.
+                const flag = document.createElement('input');
+                flag.type = 'hidden';
+                flag.name = 'timeout';
+                flag.value = '1';
+                form.appendChild(flag);
+                form.submit();
+            }
+
+            function resetIdleTimer() {
+                if (idleTimer) clearTimeout(idleTimer);
+                idleTimer = setTimeout(logoutDueToInactivity, IDLE_LIMIT_MS);
+            }
+
+            ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function (evt) {
+                window.addEventListener(evt, resetIdleTimer, { passive: true });
+            });
+
+            resetIdleTimer();
+        })();
+    </script>
 </body>
 </html>

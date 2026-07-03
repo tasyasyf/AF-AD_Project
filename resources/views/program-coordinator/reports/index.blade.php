@@ -67,29 +67,43 @@
     </div>
 </div>
 
+@php
+    // Carry the active report scope (semester/course/search) into the linked lists.
+    $listFilters = array_filter([
+        'semester' => $filters['semester'] ?? null,
+        'course' => $filters['course'] ?? null,
+        'search' => $filters['search'] ?? null,
+    ], fn ($value) => filled($value));
+    $claimFilters = array_filter([
+        'search' => $filters['search'] ?? null,
+    ], fn ($value) => filled($value));
+@endphp
+
 <div class="row g-3 mb-3">
     @foreach([
-        ['label' => 'Verified AF/AD', 'value' => $summary['verified_profiles'], 'icon' => 'people-fill'],
-        ['label' => 'Total Appointments', 'value' => $summary['total_appointments'], 'icon' => 'calendar3'],
-        ['label' => 'Active Appointments', 'value' => $summary['active_appointments'], 'icon' => 'calendar-check'],
-        ['label' => 'Submitted / Review', 'value' => $summary['submitted_claims'], 'icon' => 'hourglass-split'],
-        ['label' => 'Approved Claims', 'value' => $summary['approved_claims'], 'icon' => 'check2-circle'],
-        ['label' => 'PC Endorsed', 'value' => $summary['pc_endorsed_claims'], 'icon' => 'patch-check'],
-        ['label' => 'Pending Endorsement', 'value' => $summary['pending_pc_endorsements'], 'icon' => 'clipboard-check'],
-        ['label' => 'Returned / Rejected', 'value' => $summary['declined_claims'], 'icon' => 'x-circle'],
+        ['label' => 'Verified AF/AD', 'value' => $summary['verified_profiles'], 'icon' => 'people-fill', 'href' => route('pc.afad.index', $listFilters)],
+        ['label' => 'Total Appointments', 'value' => $summary['total_appointments'], 'icon' => 'calendar3', 'href' => route('pc.appointments.index', $listFilters)],
+        ['label' => 'Active Appointments', 'value' => $summary['active_appointments'], 'icon' => 'calendar-check', 'href' => route('pc.appointments.index', $listFilters)],
+        ['label' => 'Submitted / Review', 'value' => $summary['submitted_claims'], 'icon' => 'hourglass-split', 'href' => route('pc.claims.index', $claimFilters + ['status' => 'submitted'])],
+        ['label' => 'Approved Claims', 'value' => $summary['approved_claims'], 'icon' => 'check2-circle', 'href' => route('pc.claims.index', $claimFilters + ['status' => 'approved'])],
+        ['label' => 'PC Endorsed', 'value' => $summary['pc_endorsed_claims'], 'icon' => 'patch-check', 'href' => route('pc.claims.index', $claimFilters + ['endorsement' => 'endorsed'])],
+        ['label' => 'Pending Endorsement', 'value' => $summary['pending_pc_endorsements'], 'icon' => 'clipboard-check', 'href' => route('pc.claims.index', $claimFilters + ['endorsement' => 'pending'])],
+        ['label' => 'Returned / Rejected', 'value' => $summary['declined_claims'], 'icon' => 'x-circle', 'href' => route('pc.claims.index', $claimFilters + ['status' => 'returned'])],
     ] as $item)
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card pc-report-stat h-100">
-                <div class="card-body d-flex align-items-center gap-2">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="bi bi-{{ $item['icon'] }} fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">{{ $item['label'] }}</div>
-                        <div class="fw-bold fs-4">{{ $item['value'] }}</div>
+            <a href="{{ $item['href'] }}" class="stat-card-link">
+                <div class="card stat-card pc-report-stat h-100">
+                    <div class="card-body d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="bi bi-{{ $item['icon'] }} fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small">{{ $item['label'] }}</div>
+                            <div class="fw-bold fs-4">{{ $item['value'] }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     @endforeach
 </div>

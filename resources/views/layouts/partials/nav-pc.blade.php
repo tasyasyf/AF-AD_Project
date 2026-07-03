@@ -26,4 +26,6 @@
     <a href="{{ route('pc.reports.index') }}" class="nav-link {{ request()->routeIs('pc.reports.*') ? 'active' : '' }}">
         <i class="bi bi-bar-chart"></i> Reports
     </a>
+
+    @include('layouts.partials.nav-additional-access')
 </div>

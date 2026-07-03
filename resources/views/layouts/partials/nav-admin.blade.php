@@ -8,6 +8,9 @@
     <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
         <i class="bi bi-person-gear"></i> Users & Roles
     </a>
+    <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+        <i class="bi bi-shield-check"></i> Permissions
+    </a>
     <a href="{{ route('admin.profiles.index') }}" class="nav-link {{ request()->routeIs('admin.profiles.*') ? 'active' : '' }}">
         <i class="bi bi-people"></i> AF/AD Profiles
     </a>
